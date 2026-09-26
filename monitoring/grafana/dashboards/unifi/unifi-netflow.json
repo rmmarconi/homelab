@@ -1,0 +1,729 @@
+{
+ "title": "UniFi - NetFlow",
+ "uid": "unifi-netflow",
+ "tags": [
+  "unifi",
+  "netflow"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "refresh": "1m",
+ "panels": [
+  {
+   "type": "stat",
+   "title": "Download no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 0,
+    "y": 0
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(netflow_bytes_total{direction=\"download\",local_ip=~\"$client\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Upload no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 6,
+    "y": 0
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(netflow_bytes_total{direction=\"upload\",local_ip=~\"$client\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "orange"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Tráfego interno (entre VLANs)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 12,
+    "y": 0
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(netflow_bytes_total{direction=\"interno\",local_ip=~\"$client\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "purple"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Fluxos no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 18,
+    "y": 0
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(netflow_flows_total[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Throughput da internet (download + / upload −)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 4
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(rate(netflow_bytes_total{direction=\"download\",local_ip=~\"$client\"}[$__rate_interval])) * 8",
+     "refId": "A",
+     "legendFormat": "download"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(rate(netflow_bytes_total{direction=\"upload\",local_ip=~\"$client\"}[$__rate_interval])) * 8",
+     "refId": "B",
+     "legendFormat": "upload"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "fillOpacity": 20
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "upload"
+      },
+      "properties": [
+       {
+        "id": "custom.transform",
+        "value": "negative-Y"
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "orange"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "download"
+      },
+      "properties": [
+       {
+        "id": "color",
+        "value": {
+         "mode": "fixed",
+         "fixedColor": "green"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Top 10 clientes — download",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 0,
+    "y": 12
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "topk(10, ((sum by (local_ip) (rate(netflow_bytes_total{direction=\"download\",local_ip=~\"$client\"}[$__rate_interval])) * 8) * on(local_ip) group_left(name) (label_replace(topk by (ip) (1, max by (ip, name) (unpoller_client_uptime_seconds)), \"local_ip\", \"$1\", \"ip\", \"(.*)\") * 0 + 1)) or on(local_ip) (sum by (local_ip) (rate(netflow_bytes_total{direction=\"download\",local_ip=~\"$client\"}[$__rate_interval])) * 8))",
+     "refId": "A",
+     "legendFormat": "{{name}} {{local_ip}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "fillOpacity": 10
+     }
+    }
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "mean",
+      "max"
+     ]
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Top 10 clientes — upload",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 12,
+    "y": 12
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "topk(10, ((sum by (local_ip) (rate(netflow_bytes_total{direction=\"upload\",local_ip=~\"$client\"}[$__rate_interval])) * 8) * on(local_ip) group_left(name) (label_replace(topk by (ip) (1, max by (ip, name) (unpoller_client_uptime_seconds)), \"local_ip\", \"$1\", \"ip\", \"(.*)\") * 0 + 1)) or on(local_ip) (sum by (local_ip) (rate(netflow_bytes_total{direction=\"upload\",local_ip=~\"$client\"}[$__rate_interval])) * 8))",
+     "refId": "A",
+     "legendFormat": "{{name}} {{local_ip}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bps",
+     "custom": {
+      "fillOpacity": 10
+     }
+    }
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "mean",
+      "max"
+     ]
+    }
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Clientes que mais consumiram (período)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 8,
+    "x": 0,
+    "y": 21
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "topk(15, ((sum by (local_ip) (increase(netflow_bytes_total{direction=~\"download|upload\",local_ip=~\"$client\"}[$__range]))) * on(local_ip) group_left(name) (label_replace(topk by (ip) (1, max by (ip, name) (unpoller_client_uptime_seconds)), \"local_ip\", \"$1\", \"ip\", \"(.*)\") * 0 + 1)) or on(local_ip) (sum by (local_ip) (increase(netflow_bytes_total{direction=~\"download|upload\",local_ip=~\"$client\"}[$__range]))))",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{name}} {{local_ip}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "piechart",
+   "title": "Tráfego por serviço",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 8,
+    "x": 8,
+    "y": 21
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum by (service) (increase(netflow_bytes_total{direction=~\"download|upload\",local_ip=~\"$client\"}[$__range]))",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{service}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    }
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "value",
+      "percent"
+     ]
+    },
+    "pieType": "donut",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "piechart",
+   "title": "Tráfego por protocolo",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 8,
+    "x": 16,
+    "y": 21
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum by (proto) (increase(netflow_bytes_total{local_ip=~\"$client\"}[$__range]))",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{proto}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    }
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "value",
+      "percent"
+     ]
+    },
+    "pieType": "donut",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "table",
+   "title": "Top destinos na internet (IP remoto)",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 12,
+    "x": 0,
+    "y": 31
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "topk(25, sum by (remote_ip, service) (sum_over_time({job=\"netflow\", direction=~\"download|upload\"} | json | local_ip=~\"$client\" | unwrap bytes [$__range])))",
+     "refId": "A",
+     "queryType": "instant"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "labelsToFields"
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      },
+      "renameByName": {
+       "remote_ip": "IP remoto",
+       "service": "Serviço",
+       "Value": "Bytes",
+       "Value #A": "Bytes"
+      }
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Bytes",
+        "desc": true
+       }
+      ]
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "Bytes|Value.*"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "table",
+   "title": "Top portas remotas",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 10,
+    "w": 12,
+    "x": 12,
+    "y": 31
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "topk(25, sum by (remote_port, proto) (sum_over_time({job=\"netflow\", direction=~\"download|upload\"} | json | local_ip=~\"$client\" | unwrap bytes [$__range])))",
+     "refId": "A",
+     "queryType": "instant"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "labelsToFields"
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      },
+      "renameByName": {
+       "remote_port": "Porta",
+       "proto": "Protocolo",
+       "Value": "Bytes",
+       "Value #A": "Bytes"
+      }
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Bytes",
+        "desc": true
+       }
+      ]
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byRegexp",
+       "options": "Bytes|Value.*"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Fluxos (NetFlow)",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 14,
+    "w": 24,
+    "x": 0,
+    "y": 41
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "{job=\"netflow\", direction=~\"$direction\"} | json | local_ip=~\"$client\" | line_format \"{{.direction}}  {{.local_ip}}  ⇄  {{.remote_ip}}:{{.remote_port}}  {{.proto}}  {{.service}}  {{.bytes}} B  {{.packets}} pkts\" |~ \"$search\"",
+     "refId": "A"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "wrapLogMessage": false,
+    "sortOrder": "Descending",
+    "enableLogDetails": true
+   }
+  }
+ ],
+ "templating": {
+  "list": [
+   {
+    "name": "client",
+    "label": "Cliente (IP local)",
+    "type": "query",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "query": {
+     "query": "label_values(netflow_bytes_total, local_ip)",
+     "refId": "v"
+    },
+    "definition": "label_values(netflow_bytes_total, local_ip)",
+    "refresh": 2,
+    "includeAll": true,
+    "multi": true,
+    "allValue": ".*",
+    "sort": 3,
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "name": "direction",
+    "label": "Direção",
+    "type": "custom",
+    "query": "download,upload,interno,externo",
+    "includeAll": true,
+    "multi": true,
+    "allValue": ".*",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "name": "search",
+    "label": "Buscar",
+    "type": "textbox",
+    "query": "",
+    "current": {
+     "text": "",
+     "value": ""
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,392 @@
+{
+ "title": "UniFi - Logs do Roteador",
+ "uid": "unifi-logs",
+ "tags": [
+  "unifi",
+  "logs"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "refresh": "30s",
+ "panels": [
+  {
+   "type": "stat",
+   "title": "Eventos no período",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 0,
+    "y": 0
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "sum(count_over_time({job=\"unifi\", host=~\"$host\", category=~\"$category\", event=~\"$event\", severity=~\"$severity\"} |~ \"(?i)$search\"[$__range]))",
+     "refId": "A",
+     "queryType": "instant"
+    }
+   ],
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Eventos severidade ≥ 5",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 6,
+    "y": 0
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "sum(count_over_time({job=\"unifi\", host=~\"$host\", category=~\"$category\", severity=~\"[5-9]|10\"} |~ \"(?i)$search\" [$__range]))",
+     "refId": "A",
+     "queryType": "instant"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 20
+       }
+      ]
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Desconexões de clientes Wi-Fi",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 12,
+    "y": 0
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "sum(count_over_time({job=\"unifi\", event=~\"WiFi Client Disconnected|Wired Client Disconnected\"}[$__range]))",
+     "refId": "A",
+     "queryType": "instant"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Acessos de administração",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 18,
+    "y": 0
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "sum(count_over_time({job=\"unifi\", category=\"Audit\"}[$__range]))",
+     "refId": "A",
+     "queryType": "instant"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "graphMode": "none"
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Eventos por categoria",
+   "gridPos": {
+    "h": 8,
+    "w": 16,
+    "x": 0,
+    "y": 4
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "sum by (category) (count_over_time({job=\"unifi\", host=~\"$host\", category=~\"$category\", event=~\"$event\", severity=~\"$severity\"} |~ \"(?i)$search\"[$__auto]))",
+     "refId": "A",
+     "legendFormat": "{{category}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 80,
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    }
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Top eventos",
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 4
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "topk(15, sum by (event) (count_over_time({job=\"unifi\", host=~\"$host\", category=~\"$category\", event=~\"$event\", severity=~\"$severity\"} |~ \"(?i)$search\"[$__range])))",
+     "refId": "A",
+     "queryType": "instant",
+     "legendFormat": "{{event}}"
+    }
+   ],
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "basic",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Logs do roteador",
+   "gridPos": {
+    "h": 18,
+    "w": 24,
+    "x": 0,
+    "y": 12
+   },
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "expr": "{job=\"unifi\", host=~\"$host\", category=~\"$category\", event=~\"$event\", severity=~\"$severity\"} |~ \"(?i)$search\"",
+     "refId": "A"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "showLabels": false,
+    "wrapLogMessage": true,
+    "sortOrder": "Descending",
+    "enableLogDetails": true,
+    "dedupStrategy": "none"
+   }
+  }
+ ],
+ "templating": {
+  "list": [
+   {
+    "name": "host",
+    "label": "Host",
+    "type": "query",
+    "datasource": {
+     "type": "loki",
+     "uid": "loki"
+    },
+    "query": {
+     "label": "host",
+     "type": 1,
+     "stream": "{job=\"unifi\"}"
+    },
+    "definition": "label_values({job=\"unifi\"}, host)",
+    "refresh": 2,
+    "includeAll": true,
+    "multi": true,
+    "allValue": ".*",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "name": "category",
+    "label": "Categoria",
+    "type": "query",
+    "datasource": {
+     "type": "loki",
+     "uid": "loki"
+    },
+    "query": {
+     "label": "category",
+     "type": 1,
+     "stream": "{job=\"unifi\"}"
+    },
+    "definition": "label_values({job=\"unifi\"}, category)",
+    "refresh": 2,
+    "includeAll": true,
+    "multi": true,
+    "allValue": ".*",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "name": "event",
+    "label": "Evento",
+    "type": "query",
+    "datasource": {
+     "type": "loki",
+     "uid": "loki"
+    },
+    "query": {
+     "label": "event",
+     "type": 1,
+     "stream": "{job=\"unifi\"}"
+    },
+    "definition": "label_values({job=\"unifi\"}, event)",
+    "refresh": 2,
+    "includeAll": true,
+    "multi": true,
+    "allValue": ".*",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "name": "severity",
+    "label": "Severidade",
+    "type": "query",
+    "datasource": {
+     "type": "loki",
+     "uid": "loki"
+    },
+    "query": {
+     "label": "severity",
+     "type": 1,
+     "stream": "{job=\"unifi\"}"
+    },
+    "definition": "label_values({job=\"unifi\"}, severity)",
+    "refresh": 2,
+    "includeAll": true,
+    "multi": true,
+    "allValue": ".*",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "name": "search",
+    "label": "Buscar texto",
+    "type": "textbox",
+    "query": "",
+    "current": {
+     "text": "",
+     "value": ""
+    }
+   }
+  ]
+ }
+}

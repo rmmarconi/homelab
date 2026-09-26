@@ -1,0 +1,147 @@
+# Recebe os logs/eventos SIEM (CEF) do UniFi e envia ao Loki
+sources:
+  unifi_udp:
+    type: socket
+    mode: udp
+    address: 0.0.0.0:1514
+  unifi_tcp:
+    type: socket
+    mode: tcp
+    address: 0.0.0.0:1514
+    decoding: {codec: bytes}
+    framing: {method: newline_delimited}
+
+  goflow2_logs:
+    type: docker_logs
+    include_containers: [goflow2]
+
+transforms:
+  unifi_parse:
+    type: remap
+    inputs: [unifi_udp, unifi_tcp]
+    source: |
+      raw = strip_whitespace(to_string(.message) ?? "")
+      .host = "unifi"
+      .category = "syslog"
+      .event = "syslog"
+      .severity = "-"
+      rest = raw
+      p, err = parse_regex(raw, r'^(?:<\d+>)?(?:\w{3}\s+\d+\s[\d:]+\s)?(?P<host>\S+)\s(?P<rest>.*)$')
+      if err == null {
+        .host = p.host
+        rest = p.rest
+      }
+      if starts_with(string!(rest), "CEF:") {
+        c, e = parse_cef(string!(rest))
+        if e == null {
+          .event    = c.name
+          .severity = c.severity
+          .category = to_string(c.UNIFIcategory)
+          if .category == "" { .category = "outros" }
+          m = to_string(c.msg)
+          if m == "" { m = string!(rest) }
+          .message = "[" + .event + "] " + m
+        } else {
+          .message = rest
+        }
+      } else {
+        .message = rest
+      }
+      del(.source_type)
+      del(.port)
+
+# ---------------- NetFlow (GoFlow2 -> JSON no stdout do container) ----------------
+  netflow_parse:
+    type: remap
+    inputs: [goflow2_logs]
+    drop_on_error: true
+    source: |
+      f = object!(parse_json!(string!(.message)))
+      local_nets = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/10", "fc00::/7", "fe80::/10", "2001:db8::/56"]  # troque 2001:db8::/56 pelo seu prefixo IPv6 publico delegado
+      src = to_string(f.src_addr) ?? ""
+      dst = to_string(f.dst_addr) ?? ""
+      sl = ip_cidr_contains(local_nets, src) ?? false
+      dl = ip_cidr_contains(local_nets, dst) ?? false
+      rate = to_int(f.sampling_rate) ?? 1
+      if rate < 1 { rate = 1 }
+      bytes = (to_int(f.bytes) ?? 0) * rate
+      pkts = (to_int(f.packets) ?? 0) * rate
+      proto = to_string(f.proto) ?? "?"
+      if proto == "6" { proto = "TCP" } else if proto == "17" { proto = "UDP" } else if proto == "1" { proto = "ICMP" } else if proto == "58" { proto = "ICMPv6" }
+      sport = to_int(f.src_port) ?? 0
+      dport = to_int(f.dst_port) ?? 0
+      dir = "externo"
+      lip = src
+      rip = dst
+      rport = dport
+      if sl && !dl {
+        dir = "upload"
+      } else if !sl && dl {
+        dir = "download"
+        lip = dst
+        rip = src
+        rport = sport
+      } else if sl && dl {
+        dir = "interno"
+      }
+      svc = "outro"
+      if rport == 443 && proto == "UDP" { svc = "QUIC/HTTP3" } else if rport == 443 { svc = "HTTPS" } else if rport == 80 { svc = "HTTP" } else if rport == 53 { svc = "DNS" } else if rport == 853 { svc = "DNS-over-TLS" } else if rport == 123 { svc = "NTP" } else if rport == 22 { svc = "SSH" } else if rport >= 3478 && rport <= 3481 { svc = "STUN/WebRTC" } else if rport >= 19302 && rport <= 19309 { svc = "Google Meet/STUN" } else if rport == 5222 || rport == 5223 { svc = "Push/XMPP" } else if rport == 993 || rport == 995 || rport == 465 || rport == 587 || rport == 25 { svc = "E-mail" } else if rport == 51820 || rport == 41641 { svc = "WireGuard/Tailscale" } else if rport == 1935 { svc = "RTMP" } else if rport == 8080 || rport == 8443 { svc = "HTTP-alt" } else if rport == 5353 { svc = "mDNS" }
+      ts = now()
+      tns = to_int(f.time_flow_end_ns) ?? 0
+      if tns > 0 { ts = from_unix_timestamp(tns, unit: "nanoseconds") ?? now() }
+      . = {
+        "timestamp": ts,
+        "direction": dir, "local_ip": lip, "remote_ip": rip, "remote_port": rport, "service": svc, "proto": proto,
+        "src": src, "dst": dst, "src_port": sport, "dst_port": dport, "bytes": bytes, "packets": pkts,
+        "in_if": f.in_if, "out_if": f.out_if, "exporter": f.sampler_address
+      }
+
+  netflow_metrics:
+    type: log_to_metric
+    inputs: [netflow_parse]
+    metrics:
+      - type: counter
+        field: bytes
+        name: netflow_bytes_total
+        increment_by_value: true
+        tags: {direction: "{{ direction }}", local_ip: "{{ local_ip }}", proto: "{{ proto }}", service: "{{ service }}"}
+      - type: counter
+        field: packets
+        name: netflow_packets_total
+        increment_by_value: true
+        tags: {direction: "{{ direction }}", local_ip: "{{ local_ip }}"}
+      - type: counter
+        field: bytes
+        name: netflow_flows_total
+        tags: {direction: "{{ direction }}", service: "{{ service }}"}
+
+sinks:
+  loki:
+    type: loki
+    inputs: [unifi_parse]
+    endpoint: http://loki:3100
+    encoding: {codec: text}
+    out_of_order_action: accept
+    labels:
+      job: unifi
+      host: "{{ host }}"
+      category: "{{ category }}"
+      event: "{{ event }}"
+      severity: "{{ severity }}"
+
+  netflow_loki:
+    type: loki
+    inputs: [netflow_parse]
+    endpoint: http://loki:3100
+    encoding: {codec: json}
+    out_of_order_action: accept
+    labels:
+      job: netflow
+      direction: "{{ direction }}"
+      proto: "{{ proto }}"
+
+  netflow_prom:
+    type: prometheus_exporter
+    inputs: [netflow_metrics]
+    address: 0.0.0.0:9598
+    flush_period_secs: 600

@@ -1,0 +1,16 @@
+# segredos
+.env
+*.env
+!.env.example
+# macOS
+.DS_Store
+._*
+# dashboards baixados da comunidade (scripts/fetch-dashboards.sh)
+monitoring/grafana/dashboards/**/[0-9]*.json
+# terraform/ansible
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.retry
