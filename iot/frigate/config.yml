@@ -1,11 +1,15 @@
-# Frigate 0.18 (add-on do Home Assistant) - câmeras Tuya via ONVIF/RTSP.
+# Frigate 0.18 (VM iot, Docker) - câmeras Tuya via ONVIF/RTSP.
 # As câmeras aceitam UMA sessão RTSP (Sala e Varanda); por isso cada uma tem
 # um único stream no go2rtc, que redistribui para gravação, HA e Protect.
 # __RTSP_USER__ / __RTSP_PASS__ são trocados no servidor pelo script
 # set-frigate-cred.sh (a senha nunca vai para o git).
 
 mqtt:
-  enabled: false
+  enabled: true
+  host: 127.0.0.1
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
 
 go2rtc:
   streams:

@@ -11,11 +11,11 @@ ACS = [  # chave, nome curto, entidade climate
     ("suite", "Suite", "climate.c0393762e6bc"),
 ]
 CAMERAS = [  # entidade de vídeo, nome, sensor de movimento
-    # As 3 câmeras Tuya passam pelo Frigate (go2rtc mantém 1 conexão por câmera);
-    # o movimento vem do ONVIF. A do Escritório é UniFi e vem pelo Protect.
-    ("camera.sala", "Sala", "binary_sensor.camera_da_sala_motion_region_detection"),
-    ("camera.cozinha", "Cozinha", None),
-    ("camera.varanda", "Varanda", "binary_sensor.camera_da_varanda_motion_region_detection"),
+    # As 3 câmeras Tuya vêm do Frigate na VM iot (10.1.1.12), que mantém 1
+    # conexão por câmera via go2rtc. A do Escritório é UniFi e vem do Protect.
+    ("camera.sala", "Sala", "binary_sensor.sala_motion"),
+    ("camera.cozinha", "Cozinha", "binary_sensor.cozinha_motion"),
+    ("camera.varanda", "Varanda", "binary_sensor.varanda_motion"),
     ("camera.escritorio_high_resolution_channel", "Escritório", "binary_sensor.escritorio_movimento"),
 ]
 PESSOAS = [
