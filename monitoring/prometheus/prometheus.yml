@@ -141,3 +141,13 @@ scrape_configs:
         replacement: seerr
       - target_label: __address__
         replacement: blackbox:9115
+
+  # Home Assistant (integração prometheus:, token só de leitura em arquivo)
+  - job_name: homeassistant
+    scrape_interval: 60s
+    metrics_path: /api/prometheus
+    authorization:
+      credentials_file: /etc/prometheus/secrets/ha_token
+    static_configs:
+      - targets: ["10.1.1.11:80"]
+        labels: {instance: homeassistant}
