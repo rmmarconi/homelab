@@ -105,6 +105,41 @@ services:
     environment:
       PVE_VERIFY_SSL: "false"
 
+  qbittorrent-exporter:
+    image: ghcr.io/martabal/qbittorrent-exporter:latest
+    container_name: qbittorrent-exporter
+    restart: unless-stopped
+    mem_limit: 64m
+    environment:
+      QBITTORRENT_BASE_URL: "http://10.1.1.100:8080"
+      # O IP da VM está na whitelist do qBittorrent ("Bypass authentication
+      # for clients in whitelisted IP subnets"), então não há senha real aqui.
+      QBITTORRENT_USERNAME: "monitor"
+      QBITTORRENT_PASSWORD: "whitelist"
+      EXPORTER_PORT: "8090"
+
+  jellyfin-exporter:
+    image: python:3.13-alpine
+    container_name: jellyfin-exporter
+    restart: unless-stopped
+    mem_limit: 64m
+    command: ["python3", "-u", "/app/exporter.py"]
+    environment:
+      JELLYFIN_URL: "http://10.1.1.100:8096"
+      JELLYFIN_API_KEY: "${JELLYFIN_API_KEY:-}"
+      PORT: "9594"
+    volumes:
+      - ./exporters/jellyfin/exporter.py:/app/exporter.py:ro
+
+  blackbox:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox
+    restart: unless-stopped
+    mem_limit: 64m
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    volumes:
+      - ./blackbox:/etc/blackbox:ro
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana

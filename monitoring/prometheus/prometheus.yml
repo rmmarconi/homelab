@@ -69,3 +69,75 @@ scrape_configs:
         labels: {app: lidarr, instance: mediacenter}
       - targets: ["10.1.1.100:9710"]
         labels: {app: prowlarr, instance: mediacenter}
+      - targets: ["10.1.1.100:9711"]
+        labels: {app: bazarr, instance: mediacenter}
+
+  - job_name: qbittorrent
+    static_configs:
+      - targets: ["qbittorrent-exporter:8090"]
+        labels: {instance: mediacenter}
+
+  - job_name: jellyfin
+    static_configs:
+      - targets: ["jellyfin-exporter:9594"]
+        labels: {instance: mediacenter}
+
+  # Disponibilidade das interfaces web (sonda HTTP a partir da VM monitor)
+  - job_name: blackbox
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://10.1.1.100:8096/health
+          - http://10.1.1.100:8080/api/v2/app/version
+          - http://10.1.1.100:7878/ping
+          - http://10.1.1.100:8989/ping
+          - http://10.1.1.100:8686/ping
+          - http://10.1.1.100:9696/ping
+          - http://10.1.1.100:6767/
+          - http://10.1.1.100:5055/api/v1/status
+        labels: {instance: mediacenter}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: target
+      - source_labels: [__param_target]
+        regex: ".*:(8096|8080|7878|8989|8686|9696|6767|5055)/.*"
+        target_label: app
+        replacement: "$1"
+      - source_labels: [app]
+        regex: "8096"
+        target_label: app
+        replacement: jellyfin
+      - source_labels: [app]
+        regex: "8080"
+        target_label: app
+        replacement: qbittorrent
+      - source_labels: [app]
+        regex: "7878"
+        target_label: app
+        replacement: radarr
+      - source_labels: [app]
+        regex: "8989"
+        target_label: app
+        replacement: sonarr
+      - source_labels: [app]
+        regex: "8686"
+        target_label: app
+        replacement: lidarr
+      - source_labels: [app]
+        regex: "9696"
+        target_label: app
+        replacement: prowlarr
+      - source_labels: [app]
+        regex: "6767"
+        target_label: app
+        replacement: bazarr
+      - source_labels: [app]
+        regex: "5055"
+        target_label: app
+        replacement: seerr
+      - target_label: __address__
+        replacement: blackbox:9115
