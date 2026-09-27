@@ -22,8 +22,8 @@ e foi removido (ver histórico do git, pasta `iot/`).
 |---|---|---|
 | pve | 10.1.1.254 | Proxmox VE 9 |
 | pihole-1 / pihole-2 | 10.1.1.3 / 10.1.1.4 | DNS (LXC), sincronizados por nebula-sync |
-| webserver | 10.1.1.10 | VM |
-| openclaw | 10.1.1.20 | VM |
+| homeassistant | 10.1.1.11 (+ 10.1.0.233 default, 10.1.2.204 IoT) | Home Assistant OS (VM 105) |
+| openclaw | 10.1.1.20 | VM (desligada) |
 | monitor | 10.1.1.15 | VM Ubuntu 26.04 com a stack de monitoramento |
 | mediacenter | 10.1.1.100 | host físico separado |
 
