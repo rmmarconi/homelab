@@ -10,10 +10,12 @@ ACS = [  # chave, nome curto, entidade climate
     ("clara", "Clara", "climate.c0393762fa51"),
     ("suite", "Suite", "climate.c0393762e6bc"),
 ]
-CAMERAS = [
-    ("camera.camera_da_sala_high_resolution_channel", "Sala", "binary_sensor.camera_da_sala_movimento"),
-    ("camera.camera_da_cozinha_high_resolution_channel", "Cozinha", "binary_sensor.camera_da_cozinha_movimento"),
-    ("camera.camera_da_varanda_high_resolution_channel", "Varanda", "binary_sensor.camera_da_varanda_movimento"),
+CAMERAS = [  # entidade de vídeo, nome, sensor de movimento
+    # As 3 câmeras Tuya vêm direto por ONVIF (o Protect não repassa vídeo de
+    # câmeras de terceiros); a do Escritório é UniFi e vem pelo Protect.
+    ("camera.camera_da_sala_profile_1", "Sala", "binary_sensor.camera_da_sala_movimento"),
+    ("camera.camera_da_cozinha_profile_1", "Cozinha", "binary_sensor.camera_da_cozinha_movimento"),
+    ("camera.camera_da_varanda_profile_1", "Varanda", "binary_sensor.camera_da_varanda_movimento"),
     ("camera.escritorio_high_resolution_channel", "Escritório", "binary_sensor.escritorio_movimento"),
 ]
 PESSOAS = [
@@ -116,7 +118,7 @@ def casa():
     cams = [heading("Câmeras", "mdi:cctv")]
     for cam, n, mov in CAMERAS:
         cams.append({"type": "picture-entity", "entity": cam, "name": n, "show_state": False,
-                     "camera_view": "auto", "grid_options": {"columns": 6}})
+                     "camera_view": "live", "grid_options": {"columns": 6}})
     cams.append({"type": "glance", "show_state": True, "state_color": True,
                  "entities": [{"entity": mov, "name": n} for _, n, mov in CAMERAS]})
     cams.append(tile("alarm_control_panel.flamingos_paradise_alarm_manager", "Alarme"))
