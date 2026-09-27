@@ -8,6 +8,14 @@ Infraestrutura do meu homelab: um Proxmox VE em um Lenovo ThinkCentre Tiny (i7-4
 | `ansible/` | configuração dos hosts e deploy da stack | 🚧 próximo passo |
 | `terraform/` | criação das VMs/LXC no Proxmox | 🚧 próximo passo |
 
+## Câmeras
+
+A câmera UniFi (Escritório) e as 3 Tuya (ONVIF) gravam no UniFi Protect do
+Cloud Gateway. Só a do Escritório aparece no Home Assistant: o Protect não
+repassa vídeo de câmeras de terceiros, e a Sala e a Varanda aceitam uma única
+conexão RTSP. Um Frigate numa VM à parte funcionou, mas pesou demais no host
+e foi removido (ver histórico do git, pasta `iot/`).
+
 ## Rede
 
 | Host | IP | Função |

@@ -11,11 +11,8 @@ ACS = [  # chave, nome curto, entidade climate
     ("suite", "Suite", "climate.c0393762e6bc"),
 ]
 CAMERAS = [  # entidade de vídeo, nome, sensor de movimento
-    # As 3 câmeras Tuya vêm do Frigate na VM iot (10.1.1.12), que mantém 1
-    # conexão por câmera via go2rtc. A do Escritório é UniFi e vem do Protect.
-    ("camera.sala", "Sala", "binary_sensor.sala_motion"),
-    ("camera.cozinha", "Cozinha", "binary_sensor.cozinha_motion"),
-    ("camera.varanda", "Varanda", "binary_sensor.varanda_motion"),
+    # Só a câmera UniFi (Escritório). As 3 câmeras Tuya gravam no UniFi Protect,
+    # que não repassa vídeo de câmeras de terceiros para o HA.
     ("camera.escritorio_high_resolution_channel", "Escritório", "binary_sensor.escritorio_movimento"),
 ]
 PESSOAS = [
@@ -118,7 +115,7 @@ def casa():
     cams = [heading("Câmeras", "mdi:cctv")]
     for cam, n, mov in CAMERAS:
         cams.append({"type": "picture-entity", "entity": cam, "name": n, "show_state": False,
-                     "camera_view": "live", "grid_options": {"columns": 6}})
+                     "camera_view": "live"})
     cams.append({"type": "glance", "show_state": True, "state_color": True,
                  "entities": [{"entity": mov, "name": n} for _, n, mov in CAMERAS if mov]})
     cams.append(tile("alarm_control_panel.flamingos_paradise_alarm_manager", "Alarme"))
@@ -158,7 +155,7 @@ def casa():
                tile("sensor.backup_last_successful_automatic_backup", "Último backup", icon="mdi:backup-restore")]
 
     inicio = {"title": "Início", "path": "inicio", "icon": "mdi:home", "type": "sections", "max_columns": 4,
-              "sections": [section(clima), section(solar_cards()), section(cams, 2), section(pessoas), section(rede), section(midia), section(sistema)]}
+              "sections": [section(clima), section(solar_cards()), section(cams), section(pessoas), section(rede), section(midia), section(sistema)]}
     cameras = {"title": "Câmeras", "path": "cameras", "icon": "mdi:cctv", "type": "sections", "max_columns": 2,
                "sections": [section([{"type": "picture-entity", "entity": cam, "name": n, "camera_view": "live",
                                       "show_state": False}] + ([tile(mov, "Movimento")] if mov else [])) for cam, n, mov in CAMERAS]}
