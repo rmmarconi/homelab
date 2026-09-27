@@ -1,0 +1,643 @@
+{
+ "title": "Home Assistant - Casa",
+ "uid": "ha-casa",
+ "tags": [
+  "homeassistant",
+  "energia"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "refresh": "1m",
+ "panels": [
+  {
+   "type": "row",
+   "title": "Energia e solar",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Geração solar agora",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_sensor_power_w{job=\"homeassistant\",entity=~\"(?i).*(solar|inversor|inverter|pv|ions|micro|geracao|production).*\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 0,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "noValue": "sem inversores ainda",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FADE2A"
+     },
+     "decimals": 0
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Gerado hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_sensor_energy_kwh{job=\"homeassistant\",entity=~\"(?i).*(solar|inversor|inverter|pv|ions|micro|geracao|production).*\",entity=~\"(?i).*(today|hoje|daily|diari).*\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 6,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FADE2A"
+     },
+     "decimals": 2
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Potência medida (soma)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_sensor_power_w{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 12,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "decimals": 0
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Sensores de energia",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count({__name__=~\"hass_sensor_(power_w|energy_kwh)\",job=\"homeassistant\"}) or vector(0)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 18,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Potência por sensor",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_power_w{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 5
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 10
+     },
+     "noValue": "nenhum sensor de potência (W) ainda"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Energia por sensor (contadores)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_energy_kwh{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 24,
+    "x": 0,
+    "y": 13
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "custom": {
+      "fillOpacity": 10
+     },
+     "noValue": "nenhum sensor de energia (kWh) ainda"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "row",
+   "title": "Clima",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 20
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Temperatura",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_temperature_celsius{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_climate_current_temperature_celsius{job=\"homeassistant\"}",
+     "refId": "B",
+     "legendFormat": "{{friendly_name}} (clima)"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 21
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius",
+     "custom": {
+      "fillOpacity": 10
+     },
+     "noValue": "nenhum sensor de temperatura ainda"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Umidade",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_humidity_percent{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 21
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "custom": {
+      "fillOpacity": 10
+     },
+     "noValue": "nenhum sensor de umidade ainda"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "row",
+   "title": "Dispositivos",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 29
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Baterias",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 0,
+    "y": 30
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sort(hass_sensor_battery_percent{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "noValue": "nenhum dispositivo com bateria",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 20
+       },
+       {
+        "color": "green",
+        "value": 40
+       }
+      ]
+     }
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Portas, janelas e sensores",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_binary_sensor_state{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 8,
+    "y": 30
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "nenhum sensor binário",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "ativo",
+         "color": "orange"
+        },
+        "0": {
+         "text": "inativo",
+         "color": "green"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Luzes e tomadas",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_switch_state{job=\"homeassistant\"}) or max by (friendly_name) (hass_light_brightness_percent{job=\"homeassistant\"} > bool 0)",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 30
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "nenhuma luz ou tomada",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "ligado",
+         "color": "green"
+        },
+        "0": {
+         "text": "desligado",
+         "color": "text"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value_and_name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  }
+ ],
+ "links": [
+  {
+   "title": "Home Assistant - Sistema",
+   "type": "link",
+   "url": "/d/ha-sistema",
+   "icon": "dashboard"
+  }
+ ]
+}

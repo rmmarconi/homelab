@@ -1,0 +1,870 @@
+{
+ "title": "Home Assistant - Sistema",
+ "uid": "ha-sistema",
+ "tags": [
+  "homeassistant"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "refresh": "1m",
+ "panels": [
+  {
+   "type": "row",
+   "title": "Estado",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Home Assistant",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(up{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "no ar",
+         "color": "green"
+        },
+        "0": {
+         "text": "FORA",
+         "color": "red"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Uptime do core",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "time() - max(process_start_time_seconds{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "decimals": 1
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Entidades",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(hass_entity_available{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#3274D9"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Indisponíveis",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(hass_entity_available{job=\"homeassistant\",domain!~\"button|conversation|tts|stt|event|scene|script|notify\"} == 0) or vector(0)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 5
+       }
+      ]
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Atualizações pendentes",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(hass_update_state{job=\"homeassistant\"} == 1) or vector(0)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       }
+      ]
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Áreas",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count(hass_area_info{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "table",
+   "title": "Atualizações disponíveis",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 0,
+    "y": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_update_state{job=\"homeassistant\"} == 1",
+     "refId": "A",
+     "instant": true,
+     "format": "table"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "instance": true,
+       "job": true
+      },
+      "indexByName": {
+       "friendly_name": 0,
+       "entity": 1
+      },
+      "renameByName": {
+       "friendly_name": "Componente",
+       "entity": "Entidade"
+      }
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "tudo atualizado"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value"
+      },
+      "properties": [
+       {
+        "id": "custom.hidden",
+        "value": true
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "domain"
+      },
+      "properties": [
+       {
+        "id": "custom.hidden",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "cellHeight": "sm",
+    "showHeader": true
+   }
+  },
+  {
+   "type": "table",
+   "title": "Entidades indisponíveis",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 12,
+    "y": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_entity_available{job=\"homeassistant\",domain!~\"button|conversation|tts|stt|event|scene|script|notify\"} == 0",
+     "refId": "A",
+     "instant": true,
+     "format": "table"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "__name__": true,
+       "instance": true,
+       "job": true
+      },
+      "indexByName": {
+       "friendly_name": 0,
+       "entity": 1,
+       "domain": 2
+      },
+      "renameByName": {
+       "friendly_name": "Nome",
+       "entity": "Entidade",
+       "domain": "Domínio"
+      }
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "nenhuma entidade indisponível"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Value"
+      },
+      "properties": [
+       {
+        "id": "custom.hidden",
+        "value": true
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "cellHeight": "sm",
+    "showHeader": true
+   }
+  },
+  {
+   "type": "row",
+   "title": "Atividade",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 11
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Mudanças de estado por minuto, por domínio",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum by (domain) (rate(hass_state_change_total{job=\"homeassistant\"}[$__rate_interval])) * 60",
+     "refId": "A",
+     "legendFormat": "{{domain}}"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 0,
+    "y": 12
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "fillOpacity": 70,
+      "stacking": {
+       "mode": "normal"
+      },
+      "drawStyle": "bars"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Entidades que mais mudam de estado (período)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 12,
+    "y": 12
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "topk(12, sum by (friendly_name) (increase(hass_state_change_total{job=\"homeassistant\"}[$__range])))",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "decimals": 0
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "piechart",
+   "title": "Entidades por domínio",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 0,
+    "y": 19
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count by (domain) (hass_entity_available{job=\"homeassistant\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{domain}}"
+    }
+   ],
+   "options": {
+    "pieType": "donut",
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "value"
+     ]
+    },
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Entidades sem atualizar há mais de 1 h",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "count((time() - hass_last_updated_time_seconds{job=\"homeassistant\"}) > 3600) or vector(0)",
+     "refId": "A",
+     "legendFormat": "paradas há mais de 1 h"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 16,
+    "x": 8,
+    "y": 19
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "row",
+   "title": "Processo do Home Assistant (core)",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 26
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "CPU",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "rate(process_cpu_seconds_total{job=\"homeassistant\"}[$__rate_interval])",
+     "refId": "A",
+     "legendFormat": "core"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 0,
+    "y": 27
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "custom": {
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Memória residente",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "process_resident_memory_bytes{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "RSS"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 8,
+    "y": 27
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Descritores de arquivo abertos",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "process_open_fds{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "abertos"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "process_max_fds{job=\"homeassistant\"}",
+     "refId": "B",
+     "legendFormat": "limite"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 16,
+    "y": 27
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  }
+ ],
+ "links": [
+  {
+   "title": "Home Assistant - Casa",
+   "type": "link",
+   "url": "/d/ha-casa",
+   "icon": "dashboard"
+  },
+  {
+   "title": "Abrir o Home Assistant",
+   "type": "link",
+   "url": "http://10.1.1.11/",
+   "targetBlank": true,
+   "icon": "external link"
+  }
+ ]
+}

@@ -30,3 +30,9 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards/mediacenter
+  - name: Home Assistant
+    folder: Home Assistant
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/homeassistant
