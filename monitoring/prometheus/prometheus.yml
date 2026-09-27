@@ -31,6 +31,8 @@ scrape_configs:
         labels: {instance: pihole-1}
       - targets: ["10.1.1.4:9100"]
         labels: {instance: pihole-2}
+      - targets: ["10.1.1.100:9100"]
+        labels: {instance: mediacenter}
 
   - job_name: pihole
     static_configs:
@@ -55,3 +57,15 @@ scrape_configs:
   - job_name: netflow
     static_configs:
       - targets: ["vector:9598"]
+
+  # Mediacenter: Radarr/Sonarr/Lidarr/Prowlarr via Exportarr (binário nativo no host)
+  - job_name: arr
+    static_configs:
+      - targets: ["10.1.1.100:9707"]
+        labels: {app: radarr, instance: mediacenter}
+      - targets: ["10.1.1.100:9708"]
+        labels: {app: sonarr, instance: mediacenter}
+      - targets: ["10.1.1.100:9709"]
+        labels: {app: lidarr, instance: mediacenter}
+      - targets: ["10.1.1.100:9710"]
+        labels: {app: prowlarr, instance: mediacenter}

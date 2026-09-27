@@ -24,3 +24,9 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards/pihole
+  - name: Mediacenter
+    folder: Mediacenter
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/mediacenter
