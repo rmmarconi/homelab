@@ -153,16 +153,26 @@ def casa():
     sol = 'entity=~"(?i).*(solar|inversor|inverter|pv|ions|micro|geracao|production).*"'
     onoff = [{"type": "value", "options": {"1": {"text": "ligado", "color": "green"}, "0": {"text": "desligado", "color": "text"}}}]
     b.row("Energia e solar")
-    b.add(stat("Geração solar agora", f"sum(hass_sensor_power_w{{{J},{sol}}})", 0, 6, unit="watt", decimals=0,
-               color="#FADE2A", noval="sem inversores ainda"),
-          stat("Gerado hoje", f'sum(hass_sensor_energy_kwh{{{J},{sol},entity=~"(?i).*(today|hoje|daily|diari).*"}})',
-               6, 6, unit="kwatth", decimals=2, color="#FADE2A", noval="-"),
-          stat("Potência medida (soma)", f"sum(hass_sensor_power_w{{{J}}})", 12, 6, unit="watt", decimals=0, noval="-"),
-          stat("Sensores de energia", f'count({{__name__=~"hass_sensor_(power_w|energy_kwh)",{J}}}) or vector(0)', 18, 6))
-    b.add(ts("Potência por sensor", [t(f"hass_sensor_power_w{{{J}}}", legendFormat="{{friendly_name}}")],
-             0, 24, h=8, unit="watt", noval="nenhum sensor de potência (W) ainda"))
-    b.add(ts("Energia por sensor (contadores)", [t(f"hass_sensor_energy_kwh{{{J}}}", legendFormat="{{friendly_name}}")],
-             0, 24, unit="kwatth", noval="nenhum sensor de energia (kWh) ainda"))
+    SOLP = f'hass_sensor_power_w{{{J},entity="sensor.solar_potencia"}}'
+    TOT = f'hass_sensor_energy_kwh{{{J},entity="sensor.medidor_de_energia_solar_total_energy"}}'
+    MON = lambda e: f'{{__name__=~"hass_sensor_monetary.*",{J},entity="{e}"}}'
+    b.add(stat("Gerando agora", f"sum({SOLP})", 0, 4, unit="watt", decimals=0, color="#FADE2A", noval="-"),
+          stat("Gerado hoje", f'sum(hass_sensor_energy_kwh{{{J},entity="sensor.solar_energia_hoje"}})', 4, 4, unit="kwatth", decimals=2, color="#FADE2A", noval="-"),
+          stat("Gerado no mês", f'sum(hass_sensor_energy_kwh{{{J},entity="sensor.solar_energia_mes"}})', 8, 4, unit="kwatth", decimals=1, color="#FADE2A", noval="-"),
+          stat("Economia hoje", f'sum({MON("sensor.solar_economia_hoje")})', 12, 4, unit="currencyBRL", decimals=2, color="green", noval="-"),
+          stat("Economia no mês", f'sum({MON("sensor.solar_economia_no_mes")})', 16, 4, unit="currencyBRL", decimals=2, color="green", noval="-"),
+          stat("Pico de hoje", f"max_over_time(sum({SOLP})[1d:5m])", 20, 4, unit="watt", decimals=0, color="#FF9830", noval="-"))
+    b.add(ts("Geração solar por canal do medidor",
+             [t(f'hass_sensor_power_w{{{J},entity=~"sensor\\.medidor_de_energia_solar_potencia_[ab]"}}', legendFormat="{{friendly_name}}")],
+             0, 16, h=8, unit="watt", stack=True, noval="sem medidor solar"),
+          ts("Geração por dia (kWh)",
+             [t(f"increase({TOT}[1d])", legendFormat="gerado")], 16, 8, h=8, unit="kwatth", bars=True, right=False))
+    b.panels[-1]["interval"] = "1d"
+    b.panels[-1]["timeFrom"] = "30d"
+    b.add(ts("Potência de todos os sensores (W)", [t(f'hass_sensor_power_w{{{J},entity!="sensor.solar_potencia"}}', legendFormat="{{friendly_name}}")],
+             0, 12, h=7, unit="watt", noval="nenhum sensor de potência"),
+          ts("Tensão da rede", [t(f'hass_sensor_voltage_v{{{J}}}', legendFormat="{{friendly_name}}")],
+             12, 12, h=7, unit="volt", noval="nenhum sensor de tensão"))
     b.row("Clima")
     b.add(ts("Temperatura", [t(f"hass_sensor_temperature_celsius{{{J}}}", legendFormat="{{friendly_name}}"),
                              t(f"hass_climate_current_temperature_celsius{{{J}}}", "B", legendFormat="{{friendly_name}} (clima)")],

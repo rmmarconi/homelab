@@ -25,6 +25,11 @@ mDNS, SSDP) só acontece na VLAN 100.
     purge_keep_days: 35
   ```
 
+- `packages/solar.yaml` — medidor Tuya ERZ04C (2 canais) via Tuya Local: potência
+  total, geração hoje/mês (utility_meter), economia em R$ e quanto do consumo
+  estimado do ar-condicionado o solar cobriu no dia. O painel Energia do HA usa o
+  `total_energy` do medidor como fonte solar e os 3 ares como consumo.
+
 - `dashboards/gen_lovelace.py` — gera os dashboards **Casa** (`/painel-casa`) e
   **Ar-condicionado** (`/ar-condicionado`) para `lovelace/config/save`.
 

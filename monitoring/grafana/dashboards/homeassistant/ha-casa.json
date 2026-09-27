@@ -27,7 +27,7 @@
   },
   {
    "type": "stat",
-   "title": "Geração solar agora",
+   "title": "Gerando agora",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -38,21 +38,21 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(hass_sensor_power_w{job=\"homeassistant\",entity=~\"(?i).*(solar|inversor|inverter|pv|ions|micro|geracao|production).*\"})",
+     "expr": "sum(hass_sensor_power_w{job=\"homeassistant\",entity=\"sensor.solar_potencia\"})",
      "refId": "A",
      "instant": true
     }
    ],
    "gridPos": {
     "h": 4,
-    "w": 6,
+    "w": 4,
     "x": 0,
     "y": 1
    },
    "fieldConfig": {
     "defaults": {
      "unit": "watt",
-     "noValue": "sem inversores ainda",
+     "noValue": "-",
      "color": {
       "mode": "fixed",
       "fixedColor": "#FADE2A"
@@ -86,15 +86,15 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(hass_sensor_energy_kwh{job=\"homeassistant\",entity=~\"(?i).*(solar|inversor|inverter|pv|ions|micro|geracao|production).*\",entity=~\"(?i).*(today|hoje|daily|diari).*\"})",
+     "expr": "sum(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.solar_energia_hoje\"})",
      "refId": "A",
      "instant": true
     }
    ],
    "gridPos": {
     "h": 4,
-    "w": 6,
-    "x": 6,
+    "w": 4,
+    "x": 4,
     "y": 1
    },
    "fieldConfig": {
@@ -123,7 +123,7 @@
   },
   {
    "type": "stat",
-   "title": "Potência medida (soma)",
+   "title": "Gerado no mês",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -134,15 +134,159 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(hass_sensor_power_w{job=\"homeassistant\"})",
+     "expr": "sum(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.solar_energia_mes\"})",
      "refId": "A",
      "instant": true
     }
    ],
    "gridPos": {
     "h": 4,
-    "w": 6,
+    "w": 4,
+    "x": 8,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FADE2A"
+     },
+     "decimals": 1
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Economia hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum({__name__=~\"hass_sensor_monetary.*\",job=\"homeassistant\",entity=\"sensor.solar_economia_hoje\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
     "x": 12,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "currencyBRL",
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     },
+     "decimals": 2
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Economia no mês",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum({__name__=~\"hass_sensor_monetary.*\",job=\"homeassistant\",entity=\"sensor.solar_economia_no_mes\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "currencyBRL",
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     },
+     "decimals": 2
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Pico de hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max_over_time(sum(hass_sensor_power_w{job=\"homeassistant\",entity=\"sensor.solar_potencia\"})[1d:5m])",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
     "y": 1
    },
    "fieldConfig": {
@@ -151,7 +295,7 @@
      "noValue": "-",
      "color": {
       "mode": "fixed",
-      "fixedColor": "text"
+      "fixedColor": "#FF9830"
      },
      "decimals": 0
     }
@@ -170,55 +314,8 @@
    }
   },
   {
-   "type": "stat",
-   "title": "Sensores de energia",
-   "datasource": {
-    "type": "prometheus",
-    "uid": "prometheus"
-   },
-   "targets": [
-    {
-     "datasource": {
-      "type": "prometheus",
-      "uid": "prometheus"
-     },
-     "expr": "count({__name__=~\"hass_sensor_(power_w|energy_kwh)\",job=\"homeassistant\"}) or vector(0)",
-     "refId": "A",
-     "instant": true
-    }
-   ],
-   "gridPos": {
-    "h": 4,
-    "w": 6,
-    "x": 18,
-    "y": 1
-   },
-   "fieldConfig": {
-    "defaults": {
-     "unit": "short",
-     "noValue": "0",
-     "color": {
-      "mode": "fixed",
-      "fixedColor": "text"
-     }
-    }
-   },
-   "options": {
-    "reduceOptions": {
-     "calcs": [
-      "lastNotNull"
-     ]
-    },
-    "colorMode": "value",
-    "graphMode": "none",
-    "textMode": "value",
-    "justifyMode": "center",
-    "orientation": "horizontal"
-   }
-  },
-  {
    "type": "timeseries",
-   "title": "Potência por sensor",
+   "title": "Geração solar por canal do medidor",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -229,14 +326,14 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "hass_sensor_power_w{job=\"homeassistant\"}",
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity=~\"sensor\\.medidor_de_energia_solar_potencia_[ab]\"}",
      "refId": "A",
      "legendFormat": "{{friendly_name}}"
     }
    ],
    "gridPos": {
     "h": 8,
-    "w": 24,
+    "w": 16,
     "x": 0,
     "y": 5
    },
@@ -244,9 +341,12 @@
     "defaults": {
      "unit": "watt",
      "custom": {
-      "fillOpacity": 10
+      "fillOpacity": 10,
+      "stacking": {
+       "mode": "normal"
+      }
      },
-     "noValue": "nenhum sensor de potência (W) ainda"
+     "noValue": "sem medidor solar"
     },
     "overrides": []
    },
@@ -267,7 +367,7 @@
   },
   {
    "type": "timeseries",
-   "title": "Energia por sensor (contadores)",
+   "title": "Geração por dia (kWh)",
    "datasource": {
     "type": "prometheus",
     "uid": "prometheus"
@@ -278,24 +378,121 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "hass_sensor_energy_kwh{job=\"homeassistant\"}",
+     "expr": "increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.medidor_de_energia_solar_total_energy\"}[1d])",
+     "refId": "A",
+     "legendFormat": "gerado"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 5
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "custom": {
+      "fillOpacity": 70,
+      "drawStyle": "bars"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "interval": "1d",
+   "timeFrom": "30d"
+  },
+  {
+   "type": "timeseries",
+   "title": "Potência de todos os sensores (W)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity!=\"sensor.solar_potencia\"}",
      "refId": "A",
      "legendFormat": "{{friendly_name}}"
     }
    ],
    "gridPos": {
     "h": 7,
-    "w": 24,
+    "w": 12,
     "x": 0,
     "y": 13
    },
    "fieldConfig": {
     "defaults": {
-     "unit": "kwatth",
+     "unit": "watt",
      "custom": {
       "fillOpacity": 10
      },
-     "noValue": "nenhum sensor de energia (kWh) ainda"
+     "noValue": "nenhum sensor de potência"
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Tensão da rede",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_voltage_v{job=\"homeassistant\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 7,
+    "w": 12,
+    "x": 12,
+    "y": 13
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "custom": {
+      "fillOpacity": 10
+     },
+     "noValue": "nenhum sensor de tensão"
     },
     "overrides": []
    },

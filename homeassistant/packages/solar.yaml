@@ -1,0 +1,56 @@
+# Geração solar: medidor Tuya ERZ04C (2 canais, A e B) via Tuya Local.
+# Os contadores do medidor (total_energy*) são a fonte; aqui só somamos
+# canais, dividimos por dia/mês e calculamos a economia pela tarifa.
+
+template:
+  - sensor:
+      - name: Solar potência
+        unique_id: solar_potencia_total
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:solar-power
+        state: >
+          {{ (states('sensor.medidor_de_energia_solar_potencia_a') | float(0)
+            + states('sensor.medidor_de_energia_solar_potencia_b') | float(0)) | round(1) }}
+        availability: >
+          {{ has_value('sensor.medidor_de_energia_solar_potencia_a')
+             or has_value('sensor.medidor_de_energia_solar_potencia_b') }}
+      - name: Solar economia hoje
+        unique_id: solar_economia_hoje
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash-plus
+        state: "{{ (states('sensor.solar_energia_hoje') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Solar economia no mês
+        unique_id: solar_economia_mes
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash-plus
+        state: "{{ (states('sensor.solar_energia_mes') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Solar cobertura do ar-condicionado hoje
+        unique_id: solar_cobertura_ac_hoje
+        unit_of_measurement: "%"
+        icon: mdi:percent
+        state: >
+          {% set ac = states('sensor.ar_condicionado_consumo_hoje') | float(0) %}
+          {% set sol = states('sensor.solar_energia_hoje') | float(0) %}
+          {{ ([100, (sol / ac * 100)] | min) | round(0) if ac > 0 else 100 }}
+
+utility_meter:
+  solar_energia_hoje:
+    unique_id: solar_energia_hoje
+    source: sensor.medidor_de_energia_solar_total_energy
+    cycle: daily
+  solar_energia_mes:
+    unique_id: solar_energia_mes
+    source: sensor.medidor_de_energia_solar_total_energy
+    cycle: monthly
+  solar_energia_a_hoje:
+    unique_id: solar_energia_a_hoje
+    source: sensor.medidor_de_energia_solar_total_energy_a
+    cycle: daily
+  solar_energia_b_hoje:
+    unique_id: solar_energia_b_hoje
+    source: sensor.medidor_de_energia_solar_total_energy_b
+    cycle: daily

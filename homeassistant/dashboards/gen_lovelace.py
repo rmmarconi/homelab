@@ -58,6 +58,53 @@ AC_FEATURES = [{"type": "climate-hvac-modes", "hvac_modes": ["off", "cool", "dry
                {"type": "target-temperature"}]
 
 
+def solar_cards(compacto=True):
+    c = [heading("Energia solar", "mdi:solar-power-variant"),
+         tile("sensor.solar_potencia", "Gerando agora", icon="mdi:solar-power", grid_options={"columns": 6}),
+         tile("sensor.solar_energia_hoje", "Gerado hoje", icon="mdi:solar-panel", grid_options={"columns": 6}),
+         tile("sensor.solar_economia_hoje", "Economia hoje", grid_options={"columns": 6}),
+         tile("sensor.solar_economia_no_mes", "Economia no mês", grid_options={"columns": 6})]
+    if compacto:
+        c.append({"type": "history-graph", "title": "Geração (24 h)", "hours_to_show": 24,
+                  "entities": [{"entity": "sensor.solar_potencia", "name": "Potência"}]})
+    return c
+
+
+def solar_view():
+    agora = solar_cards(compacto=False) + [
+        tile("sensor.solar_energia_mes", "Gerado no mês", icon="mdi:solar-panel-large", grid_options={"columns": 6}),
+        tile("sensor.solar_cobertura_do_ar_condicionado_hoje", "Solar cobre do ar hoje", icon="mdi:air-conditioner", grid_options={"columns": 6}),
+        {"type": "gauge", "entity": "sensor.solar_potencia", "name": "Potência (W)", "min": 0, "max": 4000, "needle": True,
+         "severity": {"red": 0, "yellow": 400, "green": 1500}}]
+    canais = [heading("Por canal do medidor", "mdi:meter-electric"),
+              tile("sensor.medidor_de_energia_solar_potencia_a", "Canal A: potência", grid_options={"columns": 6}),
+              tile("sensor.medidor_de_energia_solar_potencia_b", "Canal B: potência", grid_options={"columns": 6}),
+              tile("sensor.solar_energia_a_hoje", "Canal A: hoje", grid_options={"columns": 6}),
+              tile("sensor.solar_energia_b_hoje", "Canal B: hoje", grid_options={"columns": 6}),
+              {"type": "entities", "title": "Rede elétrica", "entities": [
+                  {"entity": "sensor.medidor_de_energia_solar_tensao_a", "name": "Tensão A"},
+                  {"entity": "sensor.medidor_de_energia_solar_tensao_b", "name": "Tensão B"},
+                  {"entity": "sensor.medidor_de_energia_solar_corrente_a", "name": "Corrente A"},
+                  {"entity": "sensor.medidor_de_energia_solar_corrente_b", "name": "Corrente B"},
+                  {"entity": "sensor.medidor_de_energia_solar_total_energy", "name": "Total acumulado"}]}]
+    graficos = [heading("Histórico", "mdi:chart-areaspline"),
+                {"type": "history-graph", "title": "Potência por canal (hoje)", "hours_to_show": 24,
+                 "entities": [{"entity": "sensor.medidor_de_energia_solar_potencia_a", "name": "Canal A"},
+                              {"entity": "sensor.medidor_de_energia_solar_potencia_b", "name": "Canal B"}]},
+                {"type": "statistics-graph", "title": "Geração por dia (kWh)", "chart_type": "bar", "period": "day",
+                 "days_to_show": 30, "stat_types": ["change"],
+                 "entities": [{"entity": "sensor.medidor_de_energia_solar_total_energy", "name": "Geração"}]},
+                {"type": "statistics-graph", "title": "Geração solar x ar-condicionado por dia (kWh)", "chart_type": "bar",
+                 "period": "day", "days_to_show": 30, "stat_types": ["change"],
+                 "entities": [{"entity": "sensor.medidor_de_energia_solar_total_energy", "name": "Solar"}] +
+                             [{"entity": f"sensor.ar_{k}_energia", "name": f"Ar {n}"} for k, n, _ in ACS]},
+                {"type": "history-graph", "title": "Tensão da rede (24 h)", "hours_to_show": 24,
+                 "entities": [{"entity": "sensor.medidor_de_energia_solar_tensao_a", "name": "Fase A"},
+                              {"entity": "sensor.medidor_de_energia_solar_tensao_b", "name": "Fase B"}]}]
+    return {"title": "Solar", "path": "solar", "icon": "mdi:solar-power-variant", "type": "sections", "max_columns": 3,
+            "sections": [section(agora), section(canais), section(graficos, 2)]}
+
+
 def casa():
     clima = [heading("Clima", "mdi:thermometer")]
     for k, n, e in ACS:
@@ -109,11 +156,11 @@ def casa():
                tile("sensor.backup_last_successful_automatic_backup", "Último backup", icon="mdi:backup-restore")]
 
     inicio = {"title": "Início", "path": "inicio", "icon": "mdi:home", "type": "sections", "max_columns": 4,
-              "sections": [section(clima), section(cams, 2), section(pessoas), section(rede), section(midia), section(sistema)]}
+              "sections": [section(clima), section(solar_cards()), section(cams, 2), section(pessoas), section(rede), section(midia), section(sistema)]}
     cameras = {"title": "Câmeras", "path": "cameras", "icon": "mdi:cctv", "type": "sections", "max_columns": 2,
                "sections": [section([{"type": "picture-entity", "entity": cam, "name": n, "camera_view": "live",
                                       "show_state": False}, tile(mov, "Movimento")]) for cam, n, mov in CAMERAS]}
-    return {"title": "Casa", "views": [inicio, cameras]}
+    return {"title": "Casa", "views": [inicio, solar_view(), cameras]}
 
 
 def ar():
