@@ -188,9 +188,62 @@ def casa():
             "links": [{"title": "Home Assistant - Sistema", "type": "link", "url": "/d/ha-sistema", "icon": "dashboard"}]}
 
 
+def ar_condicionado():
+    b = Board()
+    ACE = 'entity=~"sensor\\.ar_(escritorio|clara|suite)_%s"'
+    LIG = f'hass_binary_sensor_state{{{J},entity=~"binary_sensor\\.ar_.*_ligado"}}'
+    tot = lambda e: f'hass_sensor_{e}{{{J}'
+    b.row("Agora")
+    b.add(stat("Aparelhos ligados", f"sum({LIG})", 0, 4, color="#3274D9"),
+          stat("Potência estimada", f'sum(hass_sensor_power_w{{{J},entity="sensor.ar_condicionado_potencia_total"}})', 4, 4, unit="watt", decimals=0),
+          stat("Consumo hoje", f'sum(hass_sensor_energy_kwh{{{J},entity="sensor.ar_condicionado_consumo_hoje"}})', 8, 4, unit="kwatth", decimals=2),
+          stat("Custo hoje", f'sum({{__name__=~"hass_sensor_monetary.*",{J},entity="sensor.ar_condicionado_custo_hoje"}})', 12, 4, unit="currencyBRL", decimals=2, color="green"),
+          stat("Consumo no mês", f'sum(hass_sensor_energy_kwh{{{J},entity="sensor.ar_condicionado_consumo_no_mes"}})', 16, 4, unit="kwatth", decimals=1),
+          stat("Custo no mês", f'sum({{__name__=~"hass_sensor_monetary.*",{J},entity="sensor.ar_condicionado_custo_no_mes"}})', 20, 4, unit="currencyBRL", decimals=2, color="green"))
+    b.add(stat("Modo de cada aparelho", f'max by (friendly_name, mode) (hass_climate_mode{{{J}}} == 1)', 0, 12, h=4,
+               legend="{{friendly_name}}: {{mode}}", text="name", cm="background",
+               maps=[{"type": "value", "options": {"1": {"color": "blue"}}}]),
+          bargauge("Tempo ligado hoje", f'max by (friendly_name) (hass_sensor_duration_h{{{J},{ACE % "tempo_ligado_hoje"}}})',
+                   12, 12, 4, "{{friendly_name}}", unit="h", decimals=1, min=0, max=24))
+    b.row("Temperatura")
+    b.add(ts("Temperatura do cômodo e desejada",
+             [t(f'max by (friendly_name) (hass_climate_current_temperature_celsius{{{J}}})', legendFormat="{{friendly_name}} (cômodo)"),
+              t(f'max by (friendly_name) (hass_climate_target_temperature_celsius{{{J}}})', "B", legendFormat="{{friendly_name}} (desejada)")],
+             0, 16, h=8, unit="celsius"),
+          ts("Diferença cômodo − desejada",
+             [t(f'max by (friendly_name) (hass_climate_current_temperature_celsius{{{J}}}) - on(friendly_name) max by (friendly_name) (hass_climate_target_temperature_celsius{{{J}}})', legendFormat="{{friendly_name}}")],
+             16, 8, h=8, unit="celsius", right=False))
+    b.row("Uso e consumo (estimado)")
+    b.add(ts("Potência estimada por aparelho",
+             [t(f'max by (friendly_name) (hass_sensor_power_w{{{J},{ACE % "potencia_estimada"}}})', legendFormat="{{friendly_name}}")],
+             0, 16, h=8, unit="watt", stack=True),
+          {"type": "state-timeline", "title": "Ligado / desligado", "datasource": P,
+           "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+           "targets": [t(f'max by (friendly_name) ({LIG})', legendFormat="{{friendly_name}}")],
+           "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"1": {"text": "ligado", "color": "blue"}, "0": {"text": "desligado", "color": "transparent"}}}]}},
+           "options": {"showValue": "never", "mergeValues": True, "rowHeight": 0.8}})
+    b.add(ts("Consumo por dia (kWh)",
+             [t(f'max by (friendly_name) (increase(hass_sensor_energy_kwh{{{J},{ACE % "energia"}}}[1d]))', legendFormat="{{friendly_name}}")],
+             0, 16, h=8, unit="kwatth", stack=True, bars=True),
+          bargauge("Custo no mês por aparelho", f'max by (friendly_name) ({{__name__=~"hass_sensor_monetary.*",{J},{ACE % "custo_no_mes"}}})',
+                   16, 8, 8, "{{friendly_name}}", unit="currencyBRL", decimals=2))
+    b.panels[-2]["interval"] = "1d"
+    b.panels[-2]["timeFrom"] = "30d"
+    b.add(bargauge("Tempo ligado no mês", f'max by (friendly_name) (hass_sensor_duration_h{{{J},{ACE % "tempo_ligado_no_mes"}}})',
+                   0, 12, 6, "{{friendly_name}}", unit="h", decimals=1),
+          bargauge("Consumo no mês por aparelho", f'max by (friendly_name) (hass_sensor_energy_kwh{{{J},{ACE % "consumo_mes"}}})',
+                   12, 12, 6, "{{friendly_name}}", unit="kwatth", decimals=1))
+    return {"title": "Home Assistant - Ar-condicionado", "uid": "ha-ar", "tags": ["homeassistant", "clima", "energia"],
+            "timezone": "browser", "schemaVersion": 39, "time": {"from": "now-24h", "to": "now"},
+            "refresh": "1m", "panels": b.panels,
+            "description": "Consumo e potência são ESTIMADOS (a Gree não mede consumo). Ajuste a potência nominal no painel Ar-condicionado do HA.",
+            "links": [{"title": "Home Assistant - Casa", "type": "link", "url": "/d/ha-casa", "icon": "dashboard"},
+                      {"title": "Abrir no Home Assistant", "type": "link", "url": "http://10.1.1.11/ar-condicionado", "targetBlank": True, "icon": "external link"}]}
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for d, name in ((sistema(), "ha-sistema.json"), (casa(), "ha-casa.json")):
+    for d, name in ((sistema(), "ha-sistema.json"), (casa(), "ha-casa.json"), (ar_condicionado(), "ha-ar-condicionado.json")):
         with open(os.path.join(OUT, name), "w") as f:
             json.dump(d, f, ensure_ascii=False, indent=1)
         print(f"{name}: {len(d['panels'])} painéis")

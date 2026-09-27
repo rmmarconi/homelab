@@ -1,0 +1,373 @@
+# Ar-condicionado Gree: tempo de uso, potência/consumo ESTIMADOS e custo.
+# A Gree não informa consumo. A potência é estimada a partir da potência
+# nominal (ajustável em input_number), do modo e da diferença entre a
+# temperatura do cômodo e a desejada (inverter trabalha mais quanto maior
+# a diferença). Trate os kWh como estimativa, não como medição.
+
+input_number:
+  tarifa_energia:
+    name: Tarifa de energia
+    unit_of_measurement: R$/kWh
+    min: 0.2
+    max: 3
+    step: 0.01
+    initial: 0.90
+    mode: box
+    icon: mdi:cash
+  ac_escritorio_potencia_nominal:
+    name: Potência nominal ar Escritório
+    unit_of_measurement: W
+    min: 300
+    max: 4000
+    step: 10
+    initial: 900
+    mode: box
+    icon: mdi:flash
+  ac_clara_potencia_nominal:
+    name: Potência nominal ar Clara
+    unit_of_measurement: W
+    min: 300
+    max: 4000
+    step: 10
+    initial: 900
+    mode: box
+    icon: mdi:flash
+  ac_suite_potencia_nominal:
+    name: Potência nominal ar Suite
+    unit_of_measurement: W
+    min: 300
+    max: 4000
+    step: 10
+    initial: 900
+    mode: box
+    icon: mdi:flash
+
+template:
+  - binary_sensor:
+      - name: Ar Escritório ligado
+        unique_id: ac_escritorio_ligado
+        device_class: running
+        icon: mdi:air-conditioner
+        state: "{{ states('climate.c03937630d3f') not in ['off', 'unavailable', 'unknown'] }}"
+      - name: Ar Clara ligado
+        unique_id: ac_clara_ligado
+        device_class: running
+        icon: mdi:air-conditioner
+        state: "{{ states('climate.c0393762fa51') not in ['off', 'unavailable', 'unknown'] }}"
+      - name: Ar Suite ligado
+        unique_id: ac_suite_ligado
+        device_class: running
+        icon: mdi:air-conditioner
+        state: "{{ states('climate.c0393762e6bc') not in ['off', 'unavailable', 'unknown'] }}"
+  - sensor:
+      - name: Ar Escritório temperatura
+        unique_id: ac_escritorio_temperatura
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ state_attr('climate.c03937630d3f', 'current_temperature') | float(none) }}"
+        availability: "{{ state_attr('climate.c03937630d3f', 'current_temperature') is number }}"
+      - name: Ar Escritório temperatura desejada
+        unique_id: ac_escritorio_alvo
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ state_attr('climate.c03937630d3f', 'temperature') | float(none) }}"
+        availability: "{{ state_attr('climate.c03937630d3f', 'temperature') is number }}"
+      - name: Ar Escritório potência estimada
+        unique_id: ac_escritorio_potencia
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: >
+          {% set modo = states('climate.c03937630d3f') %}
+          {% set nom = states('input_number.ac_escritorio_potencia_nominal') | float(900) %}
+          {% set atual = state_attr('climate.c03937630d3f', 'current_temperature') | float(0) %}
+          {% set alvo = state_attr('climate.c03937630d3f', 'temperature') | float(0) %}
+          {% if modo in ['off', 'unavailable', 'unknown'] %}0
+          {% elif modo == 'fan_only' %}35
+          {% else %}
+            {% if modo == 'heat' %}{% set dif = alvo - atual %}
+            {% elif modo in ['cool', 'dry'] %}{% set dif = atual - alvo %}
+            {% else %}{% set dif = (atual - alvo) | abs %}{% endif %}
+            {% set fator = 0.2 if dif <= 0 else [1.0, 0.35 + 0.3 * dif] | min %}
+            {{ (nom * fator) | round(0) }}
+          {% endif %}
+      - name: Ar Clara temperatura
+        unique_id: ac_clara_temperatura
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ state_attr('climate.c0393762fa51', 'current_temperature') | float(none) }}"
+        availability: "{{ state_attr('climate.c0393762fa51', 'current_temperature') is number }}"
+      - name: Ar Clara temperatura desejada
+        unique_id: ac_clara_alvo
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ state_attr('climate.c0393762fa51', 'temperature') | float(none) }}"
+        availability: "{{ state_attr('climate.c0393762fa51', 'temperature') is number }}"
+      - name: Ar Clara potência estimada
+        unique_id: ac_clara_potencia
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: >
+          {% set modo = states('climate.c0393762fa51') %}
+          {% set nom = states('input_number.ac_clara_potencia_nominal') | float(900) %}
+          {% set atual = state_attr('climate.c0393762fa51', 'current_temperature') | float(0) %}
+          {% set alvo = state_attr('climate.c0393762fa51', 'temperature') | float(0) %}
+          {% if modo in ['off', 'unavailable', 'unknown'] %}0
+          {% elif modo == 'fan_only' %}35
+          {% else %}
+            {% if modo == 'heat' %}{% set dif = alvo - atual %}
+            {% elif modo in ['cool', 'dry'] %}{% set dif = atual - alvo %}
+            {% else %}{% set dif = (atual - alvo) | abs %}{% endif %}
+            {% set fator = 0.2 if dif <= 0 else [1.0, 0.35 + 0.3 * dif] | min %}
+            {{ (nom * fator) | round(0) }}
+          {% endif %}
+      - name: Ar Suite temperatura
+        unique_id: ac_suite_temperatura
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ state_attr('climate.c0393762e6bc', 'current_temperature') | float(none) }}"
+        availability: "{{ state_attr('climate.c0393762e6bc', 'current_temperature') is number }}"
+      - name: Ar Suite temperatura desejada
+        unique_id: ac_suite_alvo
+        unit_of_measurement: °C
+        device_class: temperature
+        state_class: measurement
+        state: "{{ state_attr('climate.c0393762e6bc', 'temperature') | float(none) }}"
+        availability: "{{ state_attr('climate.c0393762e6bc', 'temperature') is number }}"
+      - name: Ar Suite potência estimada
+        unique_id: ac_suite_potencia
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: >
+          {% set modo = states('climate.c0393762e6bc') %}
+          {% set nom = states('input_number.ac_suite_potencia_nominal') | float(900) %}
+          {% set atual = state_attr('climate.c0393762e6bc', 'current_temperature') | float(0) %}
+          {% set alvo = state_attr('climate.c0393762e6bc', 'temperature') | float(0) %}
+          {% if modo in ['off', 'unavailable', 'unknown'] %}0
+          {% elif modo == 'fan_only' %}35
+          {% else %}
+            {% if modo == 'heat' %}{% set dif = alvo - atual %}
+            {% elif modo in ['cool', 'dry'] %}{% set dif = atual - alvo %}
+            {% else %}{% set dif = (atual - alvo) | abs %}{% endif %}
+            {% set fator = 0.2 if dif <= 0 else [1.0, 0.35 + 0.3 * dif] | min %}
+            {{ (nom * fator) | round(0) }}
+          {% endif %}
+      - name: Ar-condicionado potência total
+        unique_id: ac_total_potencia
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        state: >
+          {{ states('sensor.ar_escritorio_potencia_estimada') | float(0) + states('sensor.ar_clara_potencia_estimada') | float(0) + states('sensor.ar_suite_potencia_estimada') | float(0) }}
+      - name: Ar-condicionado aparelhos ligados
+        unique_id: ac_total_ligados
+        icon: mdi:air-conditioner
+        state: >
+          {{ ['binary_sensor.ar_escritorio_ligado', 'binary_sensor.ar_clara_ligado', 'binary_sensor.ar_suite_ligado'] | select('is_state', 'on') | list | count }}
+      - name: Ar-condicionado consumo hoje
+        unique_id: ac_total_consumo_dia
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        icon: mdi:lightning-bolt
+        state: >
+          {{ (states('sensor.ar_escritorio_consumo_dia') | float(0) + states('sensor.ar_clara_consumo_dia') | float(0) + states('sensor.ar_suite_consumo_dia') | float(0)) | round(2) }}
+      - name: Ar-condicionado custo hoje
+        unique_id: ac_total_custo_dia
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: >
+          {{ (states('sensor.ar_condicionado_consumo_hoje') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}
+      - name: Ar Escritório custo hoje
+        unique_id: ac_escritorio_custo_dia
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: "{{ (states('sensor.ar_escritorio_consumo_dia') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Ar Clara custo hoje
+        unique_id: ac_clara_custo_dia
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: "{{ (states('sensor.ar_clara_consumo_dia') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Ar Suite custo hoje
+        unique_id: ac_suite_custo_dia
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: "{{ (states('sensor.ar_suite_consumo_dia') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Ar-condicionado consumo no mês
+        unique_id: ac_total_consumo_mes
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        icon: mdi:lightning-bolt
+        state: >
+          {{ (states('sensor.ar_escritorio_consumo_mes') | float(0) + states('sensor.ar_clara_consumo_mes') | float(0) + states('sensor.ar_suite_consumo_mes') | float(0)) | round(2) }}
+      - name: Ar-condicionado custo no mês
+        unique_id: ac_total_custo_mes
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: >
+          {{ (states('sensor.ar_condicionado_consumo_no_mes') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}
+      - name: Ar Escritório custo no mês
+        unique_id: ac_escritorio_custo_mes
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: "{{ (states('sensor.ar_escritorio_consumo_mes') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Ar Clara custo no mês
+        unique_id: ac_clara_custo_mes
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: "{{ (states('sensor.ar_clara_consumo_mes') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+      - name: Ar Suite custo no mês
+        unique_id: ac_suite_custo_mes
+        unit_of_measurement: R$
+        device_class: monetary
+        icon: mdi:cash
+        state: "{{ (states('sensor.ar_suite_consumo_mes') | float(0) * states('input_number.tarifa_energia') | float(0.9)) | round(2) }}"
+
+sensor:
+  - platform: integration
+    name: Ar Escritório energia
+    unique_id: ac_escritorio_energia
+    source: sensor.ar_escritorio_potencia_estimada
+    unit_prefix: k
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval:
+      minutes: 1
+  - platform: integration
+    name: Ar Clara energia
+    unique_id: ac_clara_energia
+    source: sensor.ar_clara_potencia_estimada
+    unit_prefix: k
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval:
+      minutes: 1
+  - platform: integration
+    name: Ar Suite energia
+    unique_id: ac_suite_energia
+    source: sensor.ar_suite_potencia_estimada
+    unit_prefix: k
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval:
+      minutes: 1
+  - platform: history_stats
+    name: Ar Escritório tempo ligado hoje
+    unique_id: ac_escritorio_tempo_hoje
+    entity_id: binary_sensor.ar_escritorio_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Escritório tempo ligado na semana
+    unique_id: ac_escritorio_tempo_semana
+    entity_id: binary_sensor.ar_escritorio_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Escritório tempo ligado no mês
+    unique_id: ac_escritorio_tempo_mes
+    entity_id: binary_sensor.ar_escritorio_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00').replace(day=1) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Clara tempo ligado hoje
+    unique_id: ac_clara_tempo_hoje
+    entity_id: binary_sensor.ar_clara_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Clara tempo ligado na semana
+    unique_id: ac_clara_tempo_semana
+    entity_id: binary_sensor.ar_clara_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Clara tempo ligado no mês
+    unique_id: ac_clara_tempo_mes
+    entity_id: binary_sensor.ar_clara_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00').replace(day=1) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Suite tempo ligado hoje
+    unique_id: ac_suite_tempo_hoje
+    entity_id: binary_sensor.ar_suite_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Suite tempo ligado na semana
+    unique_id: ac_suite_tempo_semana
+    entity_id: binary_sensor.ar_suite_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00') - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: Ar Suite tempo ligado no mês
+    unique_id: ac_suite_tempo_mes
+    entity_id: binary_sensor.ar_suite_ligado
+    state: "on"
+    type: time
+    start: "{{ today_at('00:00').replace(day=1) }}"
+    end: "{{ now() }}"
+
+utility_meter:
+  ar_escritorio_consumo_dia:
+    unique_id: ac_escritorio_consumo_dia
+    source: sensor.ar_escritorio_energia
+    cycle: daily
+  ar_escritorio_consumo_mes:
+    unique_id: ac_escritorio_consumo_mes
+    source: sensor.ar_escritorio_energia
+    cycle: monthly
+  ar_clara_consumo_dia:
+    unique_id: ac_clara_consumo_dia
+    source: sensor.ar_clara_energia
+    cycle: daily
+  ar_clara_consumo_mes:
+    unique_id: ac_clara_consumo_mes
+    source: sensor.ar_clara_energia
+    cycle: monthly
+  ar_suite_consumo_dia:
+    unique_id: ac_suite_consumo_dia
+    source: sensor.ar_suite_energia
+    cycle: daily
+  ar_suite_consumo_mes:
+    unique_id: ac_suite_consumo_mes
+    source: sensor.ar_suite_energia
+    cycle: monthly

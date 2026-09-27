@@ -1,0 +1,837 @@
+{
+ "title": "Home Assistant - Ar-condicionado",
+ "uid": "ha-ar",
+ "tags": [
+  "homeassistant",
+  "clima",
+  "energia"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "refresh": "1m",
+ "panels": [
+  {
+   "type": "row",
+   "title": "Agora",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Aparelhos ligados",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_binary_sensor_state{job=\"homeassistant\",entity=~\"binary_sensor\\.ar_.*_ligado\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#3274D9"
+     }
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Potência estimada",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_sensor_power_w{job=\"homeassistant\",entity=\"sensor.ar_condicionado_potencia_total\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "decimals": 0
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Consumo hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.ar_condicionado_consumo_hoje\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "decimals": 2
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Custo hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum({__name__=~\"hass_sensor_monetary.*\",job=\"homeassistant\",entity=\"sensor.ar_condicionado_custo_hoje\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "currencyBRL",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     },
+     "decimals": 2
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Consumo no mês",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.ar_condicionado_consumo_no_mes\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "decimals": 1
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Custo no mês",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum({__name__=~\"hass_sensor_monetary.*\",job=\"homeassistant\",entity=\"sensor.ar_condicionado_custo_no_mes\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "currencyBRL",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     },
+     "decimals": 2
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Modo de cada aparelho",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name, mode) (hass_climate_mode{job=\"homeassistant\"} == 1)",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}: {{mode}}"
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 12,
+    "x": 0,
+    "y": 5
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "color": "blue"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "name",
+    "justifyMode": "center",
+    "orientation": "horizontal"
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Tempo ligado hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 12,
+    "x": 12,
+    "y": 5
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_sensor_duration_h{job=\"homeassistant\",entity=~\"sensor\\.ar_(escritorio|clara|suite)_tempo_ligado_hoje\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "decimals": 1,
+     "min": 0,
+     "max": 24
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "row",
+   "title": "Temperatura",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 9
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Temperatura do cômodo e desejada",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_climate_current_temperature_celsius{job=\"homeassistant\"})",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}} (cômodo)"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_climate_target_temperature_celsius{job=\"homeassistant\"})",
+     "refId": "B",
+     "legendFormat": "{{friendly_name}} (desejada)"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 16,
+    "x": 0,
+    "y": 10
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius",
+     "custom": {
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Diferença cômodo − desejada",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_climate_current_temperature_celsius{job=\"homeassistant\"}) - on(friendly_name) max by (friendly_name) (hass_climate_target_temperature_celsius{job=\"homeassistant\"})",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 10
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius",
+     "custom": {
+      "fillOpacity": 10
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom",
+     "calcs": []
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "row",
+   "title": "Uso e consumo (estimado)",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 18
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Potência estimada por aparelho",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_sensor_power_w{job=\"homeassistant\",entity=~\"sensor\\.ar_(escritorio|clara|suite)_potencia_estimada\"})",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 16,
+    "x": 0,
+    "y": 19
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 10,
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "state-timeline",
+   "title": "Ligado / desligado",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 19
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_binary_sensor_state{job=\"homeassistant\",entity=~\"binary_sensor\\.ar_.*_ligado\"})",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "ligado",
+         "color": "blue"
+        },
+        "0": {
+         "text": "desligado",
+         "color": "transparent"
+        }
+       }
+      }
+     ]
+    }
+   },
+   "options": {
+    "showValue": "never",
+    "mergeValues": true,
+    "rowHeight": 0.8
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Consumo por dia (kWh)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=~\"sensor\\.ar_(escritorio|clara|suite)_energia\"}[1d]))",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 16,
+    "x": 0,
+    "y": 27
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "custom": {
+      "fillOpacity": 70,
+      "stacking": {
+       "mode": "normal"
+      },
+      "drawStyle": "bars"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "interval": "1d",
+   "timeFrom": "30d"
+  },
+  {
+   "type": "bargauge",
+   "title": "Custo no mês por aparelho",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 27
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) ({__name__=~\"hass_sensor_monetary.*\",job=\"homeassistant\",entity=~\"sensor\\.ar_(escritorio|clara|suite)_custo_no_mes\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "currencyBRL",
+     "decimals": 2
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Tempo ligado no mês",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 0,
+    "y": 35
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_sensor_duration_h{job=\"homeassistant\",entity=~\"sensor\\.ar_(escritorio|clara|suite)_tempo_ligado_no_mes\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "decimals": 1
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Consumo no mês por aparelho",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 12,
+    "y": 35
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max by (friendly_name) (hass_sensor_energy_kwh{job=\"homeassistant\",entity=~\"sensor\\.ar_(escritorio|clara|suite)_consumo_mes\"})",
+     "refId": "A",
+     "instant": true,
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1
+    }
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   }
+  }
+ ],
+ "description": "Consumo e potência são ESTIMADOS (a Gree não mede consumo). Ajuste a potência nominal no painel Ar-condicionado do HA.",
+ "links": [
+  {
+   "title": "Home Assistant - Casa",
+   "type": "link",
+   "url": "/d/ha-casa",
+   "icon": "dashboard"
+  },
+  {
+   "title": "Abrir no Home Assistant",
+   "type": "link",
+   "url": "http://10.1.1.11/ar-condicionado",
+   "targetBlank": true,
+   "icon": "external link"
+  }
+ ]
+}
