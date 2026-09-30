@@ -103,3 +103,10 @@ Para "tokens por dia" use painel de barras com `interval: 1d` e `increase(...[1d
 - Tabelas para agentes e rotinas (última execução, próxima, status, erros seguidos), com value mappings (ok = verde, error = vermelho).
 - Variáveis: `agent` (label_values(openclaw_agent_info, agent)), com "All".
 - Títulos e descrições em português. Nada de segredo, IP público ou dado pessoal em painel.
+
+## Dashboard publicado (2026-09-30)
+
+- **http://10.1.1.15:3000/d/openclaw-overview** — pasta OpenClaw, 68 painéis em 9 seções: Visão geral · Tokens e custo · Rotinas e execuções · Agentes · Modelo e provedor · Ferramentas e mensagens · Gateway · VM · Saúde da coleta. Variável `agent`.
+- Gerado por `monitoring/scripts/gen-openclaw-dashboard.py` (repositório homelab). Cópia de trabalho: `~/.openclaw/workspace/agents/observabilidade/dashboards/openclaw-overview.json`. A primeira versão do agente ficou em `openclaw-overview.agente-v1.json`; dela vieram taxa de sucesso, turnos por gatilho, tokens por requisição, GC, RPCs, payloads e failovers.
+- Para mudar: edite a cópia de trabalho, `hl-grafana validate` e `hl-grafana push … openclaw`. Mantenha o uid.
+- Erros que já aconteceram e não devem voltar: filtrar a VM por `instance="10.1.1.20:9100"` (o label é `instance="openclaw"`); linhas (row) todas com `y=0`; confiar em `increase()` para histórico anterior a 2026-09-30.
