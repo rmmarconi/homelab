@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--
+  Modelo de currículo do agente `vagas`.
+  - Copie para curriculos/<AAAA-MM-DD>-<empresa>-<cargo>/curriculo.html e preencha.
+  - lang="pt-BR" ou lang="en" conforme o idioma da vaga (títulos das seções também).
+  - Uma coluna, texto de verdade (nada de imagem, ícone ou tabela): passa em sistemas ATS.
+  - Máximo 2 páginas A4. Remova seções vazias em vez de deixá-las em branco.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Rafael Marconi — Currículo</title>
+<style>
+  @page { size: A4; margin: 16mm 17mm 15mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Inter", "Noto Sans", Arial, sans-serif; font-size: 10pt; line-height: 1.42; color: #1f2328; margin: 0; }
+  header { margin-bottom: 11pt; }
+  h1 { font-size: 20pt; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 2pt; }
+  .titulo { font-size: 11pt; font-weight: 600; color: #0f766e; margin: 0 0 4pt; }
+  .contato { font-size: 9pt; color: #59636e; margin: 0; }
+  .contato a { color: #59636e; text-decoration: none; }
+  h2 { font-size: 10.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #0f766e;
+       border-bottom: 1px solid #d1d9e0; padding-bottom: 2pt; margin: 12pt 0 6pt; }
+  p { margin: 0 0 5pt; }
+  .resumo { margin-bottom: 2pt; }
+  .skills p { margin: 0 0 2.5pt; }
+  .skills b { font-weight: 600; }
+  .job { margin: 0 0 8pt; break-inside: avoid-page; }
+  .job-head { display: flex; justify-content: space-between; gap: 10pt; align-items: baseline; }
+  .cargo { font-weight: 700; font-size: 10.3pt; }
+  .periodo { font-size: 9pt; color: #59636e; white-space: nowrap; }
+  .empresa { color: #59636e; font-size: 9.3pt; margin: 0 0 3pt; }
+  ul { margin: 2pt 0 0; padding-left: 13pt; }
+  li { margin: 0 0 2.2pt; }
+  .compacto p { margin: 0 0 2pt; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Rafael Marconi</h1>
+    <p class="titulo"><!-- título profissional alinhado à vaga, sem exagero (ex.: Site Reliability Engineer | Linux · Kubernetes · CDN) --></p>
+    <p class="contato"><!-- cidade/país · e-mail · telefone · linkedin.com/in/rmmarconi · github.com/rmmarconi --></p>
+  </header>
+
+  <h2>Resumo</h2>
+  <p class="resumo"><!-- 3 a 4 frases, primeira pessoa implícita, conectando a experiência real aos requisitos centrais da vaga --></p>
+
+  <h2>Competências</h2>
+  <div class="skills">
+    <!-- 4 a 6 linhas, na ordem de importância PARA ESTA VAGA; só tecnologias que estão no currículo original -->
+    <p><b>Categoria:</b> item, item, item</p>
+  </div>
+
+  <h2>Experiência</h2>
+  <!-- repita .job para cada experiência, da mais recente para a mais antiga; nenhuma pode sumir -->
+  <div class="job">
+    <div class="job-head"><span class="cargo">Cargo</span><span class="periodo">mmm aaaa – mmm aaaa</span></div>
+    <p class="empresa">Empresa · contexto curto (ex.: CDN global)</p>
+    <ul>
+      <li>Conquista/responsabilidade reescrita com foco no requisito da vaga, sem inventar números.</li>
+    </ul>
+  </div>
+
+  <h2>Experiências anteriores</h2>
+  <div class="compacto"><p>Empresa — Cargo · aaaa–aaaa</p></div>
+
+  <h2>Formação</h2>
+  <div class="compacto"><p><b>Curso</b> — Instituição · aaaa–aaaa</p></div>
+
+  <h2>Certificações</h2>
+  <div class="compacto"><p>Certificação — Emissor</p></div>
+
+  <h2>Idiomas</h2>
+  <div class="compacto"><p>Português — nativo · Inglês — profissional</p></div>
+</body>
+</html>

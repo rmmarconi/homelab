@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# vg-pdf <curriculo.html> <saida.pdf>  — gera o PDF (A4) com o Chromium headless.
+set -euo pipefail
+W="$HOME/.openclaw/workspace/agents/vagas"; IN="${1:-}"; OUT="${2:-}"
+[ -f "$IN" ] && [ -n "$OUT" ] || { echo "uso: vg-pdf <arquivo.html> <saida.pdf>"; exit 2; }
+for p in "$IN" "$(dirname "$OUT")"; do case "$(realpath "$p")" in "$W"/*) ;; *) echo "use arquivos dentro de $W"; exit 2;; esac; done
+CHROME=$(ls -d "$HOME"/.cache/ms-playwright/chromium-*/chrome-linux64/chrome 2>/dev/null | sort -V | tail -1)
+[ -x "$CHROME" ] || { echo "Chromium não encontrado"; exit 1; }
+"$CHROME" --headless=new --no-sandbox --disable-gpu --no-pdf-header-footer --run-all-compositor-stages-before-draw \
+  --virtual-time-budget=3000 --print-to-pdf="$OUT" "file://$(realpath "$IN")" >/dev/null 2>&1
+[ -s "$OUT" ] || { echo "falha ao gerar o PDF"; exit 1; }
+paginas=$(pdfinfo "$OUT" 2>/dev/null | awk '/^Pages:/{print $2}')
+echo "PDF: $OUT ($(du -h "$OUT" | cut -f1), ${paginas:-?} página(s))"
+[ "${paginas:-1}" -le 2 ] || echo "ATENÇÃO: mais de 2 páginas — enxugue o currículo."

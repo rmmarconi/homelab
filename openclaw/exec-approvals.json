@@ -1,21 +1,198 @@
 {
   "version": 1,
-  "defaults": { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+  "defaults": {
+    "security": "allowlist",
+    "ask": "on-miss",
+    "askFallback": "deny",
+    "autoAllowSkills": false
+  },
   "agents": {
     "*": {
-      "security": "allowlist", "ask": "on-miss", "askFallback": "deny",
+      "security": "allowlist",
+      "ask": "on-miss",
+      "askFallback": "deny",
       "allowlist": [
-        { "pattern": "~/.openclaw/tools/homelab/bin/hl-*" },
-        { "pattern": "ls" }, { "pattern": "cat" }, { "pattern": "head" }, { "pattern": "tail" },
-        { "pattern": "grep" }, { "pattern": "wc" }, { "pattern": "jq" }, { "pattern": "date" },
-        { "pattern": "sort" }, { "pattern": "uniq" }, { "pattern": "cut" }, { "pattern": "du" },
-        { "pattern": "df" }, { "pattern": "uptime" }, { "pattern": "mkdir", "argPattern": "^-p [^ ]+$" }
+        {
+          "pattern": "mkdir",
+          "argPattern": "^-p [^ ]+$"
+        },
+        {
+          "pattern": "cat"
+        },
+        {
+          "pattern": "cut"
+        },
+        {
+          "pattern": "date"
+        },
+        {
+          "pattern": "df"
+        },
+        {
+          "pattern": "du"
+        },
+        {
+          "pattern": "grep"
+        },
+        {
+          "pattern": "head"
+        },
+        {
+          "pattern": "jq"
+        },
+        {
+          "pattern": "ls"
+        },
+        {
+          "pattern": "sort"
+        },
+        {
+          "pattern": "tail"
+        },
+        {
+          "pattern": "uniq"
+        },
+        {
+          "pattern": "uptime"
+        },
+        {
+          "pattern": "wc"
+        },
+        {
+          "pattern": "~/.openclaw/tools/homelab/bin/hl-*"
+        }
       ]
     },
     "wordpress": {
-      "security": "allowlist", "ask": "on-miss", "askFallback": "deny",
+      "security": "allowlist",
+      "ask": "on-miss",
+      "askFallback": "deny",
       "allowlist": [
-        { "pattern": "python3", "argPattern": "^(/home/rmmarconi/\\.openclaw/workspace/agents/wordpress/)?scripts/[a-z_]+\\.py( .*)?$" }
+        {
+          "pattern": "python3",
+          "argPattern": "^(/home/rmmarconi/\\.openclaw/workspace/agents/wordpress/)?scripts/[a-z_]+\\.py( .*)?$"
+        },
+        {
+          "pattern": "cat"
+        },
+        {
+          "pattern": "cut"
+        },
+        {
+          "pattern": "date"
+        },
+        {
+          "pattern": "grep"
+        },
+        {
+          "pattern": "head"
+        },
+        {
+          "pattern": "jq"
+        },
+        {
+          "pattern": "ls"
+        },
+        {
+          "pattern": "sort"
+        },
+        {
+          "pattern": "tail"
+        },
+        {
+          "pattern": "uniq"
+        },
+        {
+          "pattern": "wc"
+        }
+      ]
+    },
+    "vagas": {
+      "security": null,
+      "ask": null,
+      "askFallback": null,
+      "allowlist": [
+        {
+          "pattern": "/usr/bin/git",
+          "argPattern": "sha256:cwd-argv:v1:335bf8702ecdd2f41799b20f0f0462902e3a0d06496452d9098e1f96b1ac31ae"
+        },
+        {
+          "pattern": "/usr/bin/git",
+          "argPattern": "sha256:cwd-argv:v1:344ab5527cbf52e400b4fd35f90b090134b965330b27ae202a75fdd3875dd2e2"
+        },
+        {
+          "pattern": "/usr/bin/git",
+          "argPattern": "sha256:cwd-argv:v1:5a6fd354bd1a231ab3c8e8abcaf337825f64461252ea569e1388553d5b056627"
+        },
+        {
+          "pattern": "/usr/bin/git",
+          "argPattern": "sha256:cwd-argv:v1:8d84376853d5b09f24d98658abb12a7953255261cbdc31d9464a28a64ba431c6"
+        },
+        {
+          "pattern": "/usr/bin/git",
+          "argPattern": "sha256:cwd-argv:v1:ced588caf25c5d5f5c7352fd645beb46fad54353cac476315c94c8cca4a6dbbe"
+        },
+        {
+          "pattern": "/usr/bin/git",
+          "argPattern": "sha256:cwd-argv:v1:ec66a47510684e73f1d0bc9fdbe7f066461d18aeb9ac9927dbca2a5c58aa514c"
+        },
+        {
+          "pattern": "=node-command:6d4bd08f3a299f0c"
+        },
+        {
+          "pattern": "=node-command:97fe261774a27689"
+        },
+        {
+          "pattern": "=node-command:b67659689dbe4817"
+        },
+        {
+          "pattern": "=node-command:c942c8c34ef08054"
+        },
+        {
+          "pattern": "=node-command:c96885f0a85f64c6"
+        },
+        {
+          "pattern": "=node-command:e32252212b24e6c0"
+        },
+        {
+          "pattern": "cat"
+        },
+        {
+          "pattern": "cut"
+        },
+        {
+          "pattern": "date"
+        },
+        {
+          "pattern": "grep"
+        },
+        {
+          "pattern": "head"
+        },
+        {
+          "pattern": "jq"
+        },
+        {
+          "pattern": "ls"
+        },
+        {
+          "pattern": "sort"
+        },
+        {
+          "pattern": "tail"
+        },
+        {
+          "pattern": "uniq"
+        },
+        {
+          "pattern": "wc"
+        },
+        {
+          "pattern": "~/.openclaw/tools/homelab/bin/hl-*"
+        },
+        {
+          "pattern": "~/.openclaw/tools/vagas/bin/vg-*"
+        }
       ]
     }
   }

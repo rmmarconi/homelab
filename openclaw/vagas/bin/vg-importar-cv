@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# vg-importar-cv <arquivo>  — copia o currículo enviado pelo Rafael para perfil/ e extrai o texto.
+set -euo pipefail
+W="$HOME/.openclaw/workspace/agents/vagas"; F="${1:-}"
+[ -f "$F" ] || { echo "uso: vg-importar-cv <arquivo (pdf, docx, txt, md)>"; exit 2; }
+case "$(realpath "$F")" in "$HOME"/.openclaw/*) ;; *) echo "o arquivo precisa estar dentro de ~/.openclaw (ex.: media/inbound)"; exit 2;; esac
+mkdir -p "$W/perfil"; ext="${F##*.}"; ext="$(printf %s "$ext" | tr A-Z a-z)"; D="$W/perfil/curriculo-original-$(date +%Y%m%d).$ext"
+cp "$F" "$D"; chmod 600 "$D"
+case "$ext" in
+  pdf) pdftotext -layout "$D" "$W/perfil/curriculo-original.txt" ;;
+  txt|md) cp "$D" "$W/perfil/curriculo-original.txt" ;;
+  docx) python3 -c 'import sys,zipfile,re,html; x=zipfile.ZipFile(sys.argv[1]).read("word/document.xml").decode(); x=re.sub(r"</w:p>","\n",x); print(html.unescape(re.sub(r"<[^>]+>","",x)))' "$D" > "$W/perfil/curriculo-original.txt" ;;
+  *) echo "formato não suportado: $ext (envie PDF, DOCX, TXT ou MD)"; exit 2 ;;
+esac
+chmod 600 "$W/perfil/curriculo-original.txt"
+echo "importado: $D"; echo "texto: $W/perfil/curriculo-original.txt ($(wc -w < "$W/perfil/curriculo-original.txt") palavras)"

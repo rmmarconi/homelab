@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+"""vg-buscar "<termo>" [--fontes linkedin,gupy,...] [--local Brasil] [--dias 3] [--limite 25]
+
+Busca vagas em fontes públicas (sem login) e imprime uma vaga por linha em JSON:
+{"id","fonte","titulo","empresa","local","remoto","url","data","resumo"}
+
+Fontes: linkedin (páginas públicas), gupy, remotive, remoteok, weworkremotely,
+jobicy, arbeitnow. Não aplica em vaga nenhuma: só lista.
+"""
+import argparse
+import hashlib
+import html
+import json
+import re
+import sys
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+
+UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142 Safari/537.36"
+TODAS = ["linkedin", "gupy", "remotive", "remoteok", "weworkremotely", "jobicy", "arbeitnow"]
+
+
+def get(url, timeout=20):
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def limpa(txt, n=400):
+    txt = re.sub(r"<[^>]+>", " ", txt or "")
+    txt = re.sub(r"\s+", " ", html.unescape(txt)).strip()
+    return txt[:n]
+
+
+def vid(fonte, url):
+    return fonte + ":" + hashlib.sha1(url.encode()).hexdigest()[:12]
+
+
+def contem(termo, *campos):
+    alvo = " ".join(c or "" for c in campos).lower()
+    return all(p in alvo for p in termo.lower().split())
+
+
+def linkedin(termo, local, dias, limite, remoto=False):
+    out = []
+    # O LinkedIn ignora nomes de país: usa geoId (Brasil 106057199, mundo 92000000).
+    geo = {"brasil": "106057199", "brazil": "106057199", "worldwide": "92000000", "mundo": "92000000"}.get((local or "brasil").lower())
+    params = {"keywords": termo, "f_TPR": f"r{dias * 86400}", "start": 0}
+    if remoto:
+        params["f_WT"] = "2"  # só vagas remotas
+    if geo:
+        params["geoId"] = geo
+    else:
+        params["location"] = local
+    for start in (0, 25):
+        params["start"] = start
+        page = get("https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?" + urllib.parse.urlencode(params))
+        for card in page.split("<li")[1:]:
+            m_id = re.search(r"urn:li:jobPosting:(\d+)", card)
+            if not m_id:
+                continue
+            t = re.search(r'base-search-card__title[^>]*>(.*?)</h3>', card, re.S)
+            e = re.search(r'base-search-card__subtitle[^>]*>(.*?)</h4>', card, re.S)
+            l = re.search(r'job-search-card__location[^>]*>(.*?)</span>', card, re.S)
+            d = re.search(r'datetime="([^"]+)"', card)
+            url = f"https://www.linkedin.com/jobs/view/{m_id.group(1)}/"
+            loc = limpa(l.group(1) if l else "", 120)
+            out.append({"id": "linkedin:" + m_id.group(1), "fonte": "linkedin", "titulo": limpa(t.group(1) if t else "", 200),
+                        "empresa": limpa(e.group(1) if e else "", 120), "local": loc,
+                        "remoto": bool(re.search(r"remot|remote", loc + (t.group(1) if t else ""), re.I)),
+                        "url": url, "data": d.group(1) if d else "", "resumo": ""})
+        if len(out) >= limite:
+            break
+    return out[:limite]
+
+
+def gupy(termo, local, dias, limite):
+    data = json.loads(get("https://employability-portal.gupy.io/api/v1/jobs?" + urllib.parse.urlencode({"jobName": termo, "limit": limite})))
+    out = []
+    for j in data.get("data", []):
+        loc = ", ".join(x for x in (j.get("city"), j.get("state")) if x) or j.get("workplaceType", "")
+        out.append({"id": vid("gupy", j["jobUrl"]), "fonte": "gupy", "titulo": j.get("name", ""), "empresa": j.get("careerPageName", ""),
+                    "local": loc, "remoto": j.get("workplaceType") == "remote", "url": j["jobUrl"],
+                    "data": j.get("publishedDate", ""), "resumo": limpa(j.get("description", ""))})
+    return out
+
+
+def remotive(termo, local, dias, limite):
+    # a API ignora "search"; a categoria DevOps/Sysadmin traz o que interessa e o termo filtra localmente
+    jobs = []
+    for q in ({"category": "devops"}, {"category": "software-dev"}):
+        jobs += json.loads(get("https://remotive.com/api/remote-jobs?" + urllib.parse.urlencode(q))).get("jobs", [])
+    data = {"jobs": jobs}
+    return [{"id": vid("remotive", j["url"]), "fonte": "remotive", "titulo": j["title"], "empresa": j["company_name"],
+             "local": j.get("candidate_required_location", ""), "remoto": True, "url": j["url"],
+             "data": j.get("publication_date", ""), "resumo": limpa(j.get("description", ""))}
+            for j in data.get("jobs", []) if contem(termo, j.get("title"), " ".join(j.get("tags") or []))][:limite]
+
+
+def remoteok(termo, local, dias, limite):
+    data = json.loads(get("https://remoteok.com/api"))[1:]
+    out = []
+    for j in data:
+        if not contem(termo, j.get("position"), " ".join(j.get("tags") or [])):
+            continue
+        url = j.get("url") or f"https://remoteok.com/remote-jobs/{j.get('id')}"
+        out.append({"id": vid("remoteok", url), "fonte": "remoteok", "titulo": j.get("position", ""), "empresa": j.get("company", ""),
+                    "local": j.get("location", "") or "Worldwide", "remoto": True, "url": url,
+                    "data": j.get("date", ""), "resumo": limpa(j.get("description", ""))})
+    return out[:limite]
+
+
+def weworkremotely(termo, local, dias, limite):
+    out = []
+    for cat in ("remote-devops-sysadmin-jobs", "remote-back-end-programming-jobs"):
+        root = ET.fromstring(get(f"https://weworkremotely.com/categories/{cat}.rss"))
+        for it in root.iter("item"):
+            titulo = it.findtext("title", "")
+            desc = it.findtext("description", "")
+            if not contem(termo, titulo):
+                continue
+            empresa, _, cargo = titulo.partition(": ")
+            url = it.findtext("link", "")
+            out.append({"id": vid("wwr", url), "fonte": "weworkremotely", "titulo": cargo or titulo, "empresa": empresa,
+                        "local": it.findtext("region", "") or "Remote", "remoto": True, "url": url,
+                        "data": it.findtext("pubDate", ""), "resumo": limpa(desc)})
+    return out[:limite]
+
+
+def jobicy(termo, local, dias, limite):
+    data = json.loads(get("https://jobicy.com/api/v2/remote-jobs?" + urllib.parse.urlencode({"count": 50, "tag": termo})))
+    return [{"id": vid("jobicy", j["url"]), "fonte": "jobicy", "titulo": j["jobTitle"], "empresa": j["companyName"],
+             "local": j.get("jobGeo", ""), "remoto": True, "url": j["url"], "data": j.get("pubDate", ""),
+             "resumo": limpa(j.get("jobExcerpt", ""))} for j in data.get("jobs", [])[:limite]]
+
+
+def arbeitnow(termo, local, dias, limite):
+    data = json.loads(get("https://www.arbeitnow.com/api/job-board-api"))
+    out = []
+    for j in data.get("data", []):
+        if not contem(termo, j.get("title"), " ".join(j.get("tags") or [])):
+            continue
+        out.append({"id": vid("arbeitnow", j["url"]), "fonte": "arbeitnow", "titulo": j["title"], "empresa": j["company_name"],
+                    "local": j.get("location", ""), "remoto": bool(j.get("remote")), "url": j["url"],
+                    "data": str(j.get("created_at", "")), "resumo": limpa(j.get("description", ""))})
+    return out[:limite]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("termo")
+    ap.add_argument("--fontes", default=",".join(TODAS))
+    ap.add_argument("--local", default="Brasil", help="só LinkedIn (ex.: Brasil, Brasília, Worldwide)")
+    ap.add_argument("--dias", type=int, default=3)
+    ap.add_argument("--limite", type=int, default=25)
+    ap.add_argument("--remoto", action="store_true", help="só vagas remotas (LinkedIn)")
+    a = ap.parse_args()
+    vistos = set()
+    for f in a.fontes.split(","):
+        fn = globals().get(f.strip())
+        if f.strip() not in TODAS or not fn:
+            print(json.dumps({"erro": f"fonte desconhecida: {f}"}), file=sys.stderr)
+            continue
+        try:
+            args = (a.termo, a.local, a.dias, a.limite) + ((a.remoto,) if fn is linkedin else ())
+            for vaga in fn(*args):
+                if vaga["url"] in vistos:
+                    continue
+                vistos.add(vaga["url"])
+                print(json.dumps(vaga, ensure_ascii=False))
+        except Exception as e:  # uma fonte fora do ar não derruba as outras
+            print(json.dumps({"erro": f"{f}: {type(e).__name__}: {str(e)[:120]}"}, ensure_ascii=False), file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# vg-enviar <arquivo.pdf|-> <mensagem.txt>  — envia ao Rafael no Telegram (PDF como documento + texto).
+set -euo pipefail
+export PATH="$HOME/.npm-global/bin:$PATH"
+W="$HOME/.openclaw/workspace/agents/vagas"; PDF="${1:-}"; MSG="${2:-}"
+TO=$(cat "$HOME/.config/homelab/telegram_chat_id" 2>/dev/null) || { echo "chat do Telegram não configurado"; exit 1; }
+[ -f "$MSG" ] || { echo "uso: vg-enviar <arquivo.pdf|-> <mensagem.txt>"; exit 2; }
+case "$(realpath "$MSG")" in "$W"/*) ;; *) echo "a mensagem precisa estar dentro de $W"; exit 2;; esac
+TXT="$(cat "$MSG")"
+if [ "$PDF" = "-" ]; then
+  openclaw message send --channel telegram -t "$TO" -m "$TXT" >/dev/null && echo "mensagem enviada"
+  exit
+fi
+case "$(realpath "$PDF")" in "$W"/*.pdf) ;; *) echo "o PDF precisa estar dentro de $W"; exit 2;; esac
+if [ "${#TXT}" -le 1000 ]; then
+  openclaw message send --channel telegram -t "$TO" --media "$PDF" --force-document -m "$TXT" >/dev/null
+else  # legenda do Telegram tem limite: manda o texto e depois o arquivo
+  openclaw message send --channel telegram -t "$TO" -m "$TXT" >/dev/null
+  openclaw message send --channel telegram -t "$TO" --media "$PDF" --force-document -m "$(basename "$PDF")" >/dev/null
+fi
+echo "enviado: $(basename "$PDF")"
