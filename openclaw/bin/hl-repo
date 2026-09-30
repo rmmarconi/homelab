@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# hl-repo [log N]  — atualiza o clone local (só leitura) de github.com/rmmarconi/homelab e mostra mudanças.
+D="$HOME/homelab"
+[ -d "$D/.git" ] || git clone -q https://github.com/rmmarconi/homelab.git "$D"
+git -C "$D" pull -q --ff-only 2>&1 | tail -1
+git -C "$D" log --date=short --pretty='%ad %h %s' -n "${2:-15}"

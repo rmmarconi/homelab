@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# hl-prom '<PromQL>'  — consulta instantânea ao Prometheus (somente leitura).
+. "$(dirname "$0")/_hl-common.sh"
+[ -n "${1:-}" ] || { echo "uso: hl-prom '<PromQL>'"; exit 2; }
+curl -sG -m 20 "$PROM/api/v1/query" --data-urlencode "query=$1" \
+  | jq -r 'if .status!="success" then "erro: \(.error)" else
+      (.data.result[] | "\(.metric | del(.__name__, .job) | to_entries | map("\(.key)=\(.value)") | join(" "))  =>  \(.value[1])") end'

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# hl-ha states [regex]  |  hl-ha get <entity_id>  |  hl-ha info   — Home Assistant, só GET.
+. "$(dirname "$0")/_hl-common.sh"
+case "${1:-}" in
+  info)   ha_get /api/config | jq -c '{version, location_name, time_zone, components: (.components|length)}' ;;
+  states) R="${2:-.}"; ha_get /api/states | jq -r --arg r "$R" '.[] | select(.entity_id|test($r)) | "\(.entity_id)\t\(.state)\t\(.attributes.unit_of_measurement // "")\t\(.attributes.friendly_name // "")"' ;;
+  get)    [[ "${2:-}" =~ ^[a-z_]+\.[a-z0-9_]+$ ]] || { echo "entity_id inválido"; exit 2; }
+          ha_get "/api/states/$2" | jq '{entity_id, state, last_changed, attributes}' ;;
+  *) echo "uso: hl-ha info | states [regex] | get <entity_id>"; exit 2 ;;
+esac

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# hl-check <proxmox|pihole|monitor|mediacenter|homeassistant|blog|all> — verificação de saúde (leitura).
+. "$(dirname "$0")/_hl-common.sh"
+proxmox() { sec "Proxmox"; rsh $PVE '
+  pveversion | head -1; uptime -p
+  echo "-- VMs"; qm list | tail -n +2 | awk "{print \$1, \$2, \$3, \$4\"MB\"}"
+  echo "-- LXC"; pct list | tail -n +2 | awk "{print \$1, \$2, \$NF}"
+  echo "-- thin pool"; lvs --noheadings -o lv_name,lv_size,data_percent,metadata_percent pve/data
+  echo "-- storage"; pvesm status | tail -n +2 | awk "{print \$1, \$2, \$3, \$NF}"
+  echo "-- boots recentes"; journalctl --list-boots --no-pager 2>/dev/null | tail -4
+  echo "-- CPU"; sensors 2>/dev/null | grep -E "Package|Core" | head -5
+  echo "-- SSD"; smartctl -H -A /dev/sda 2>/dev/null | grep -E "result|Reallocated|Pending|Temperature|UDMA_CRC"
+  echo "-- memória"; free -m | sed -n 2p
+  echo "-- atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'; }
+pihole() { sec "Pi-hole"; rsh $PVE 'for c in 100 101; do echo "LXC $c: $(pct exec $c -- pihole status 2>&1 | tr "\n" " " | cut -c1-160)"; done'; }
+monitor() { sec "Monitor (10.1.1.15)"; rsh $MON 'uptime -p; free -m | sed -n 2p; df -h / | tail -1; docker ps --format "{{.Names}} {{.Status}}" | sort; echo "atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'
+  echo "-- alvos do Prometheus fora do ar:"; curl -s -m 10 "$PROM/api/v1/targets" | jq -r '.data.activeTargets[] | select(.health!="up") | "  \(.labels.job)/\(.labels.instance) \(.lastError)"'; }
+mediacenter() { sec "Mediacenter (10.1.1.100)"; rsh $MEDIA '
+  uptime -p; free -m | sed -n 2p; df -h /data / | tail -2
+  for s in jellyfin qbittorrent prowlarr radarr sonarr lidarr bazarr seerr flaresolverr; do printf "%s=%s " $s $(systemctl is-active $s); done; echo
+  echo "-- SMART"; for d in sda sdb sdc; do echo "$d: $(sudo -n smartctl -H /dev/$d 2>/dev/null | grep -o "PASSED\|FAILED") $(sudo -n smartctl -A /dev/$d 2>/dev/null | awk "/Temperature_Celsius/{print \$10\"C\"} /Reallocated_Sector_Ct/{print \"realoc=\"\$10}" | tr "\n" " ")"; done
+  echo "-- LVM"; sudo -n lvs --noheadings -o lv_name,lv_size,devices 2>/dev/null | head -3
+  echo "atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'; }
+homeassistant() { sec "Home Assistant"; ha_get /api/config | jq -r '"versão \(.version) — \(.location_name)"'
+  ha_get /api/states | jq -r '
+    "atualizações pendentes: " + ([.[] | select((.entity_id|startswith("update.")) and .state=="on") | .attributes.friendly_name] | join(", ") | if .=="" then "nenhuma" else . end),
+    "indisponíveis (exceto botões): " + ([.[] | select(.state=="unavailable" and ((.entity_id|split(".")[0]) as $d | ["button","event","tts","conversation"] | index($d) | not))] | length | tostring),
+    "ar-condicionado ligado: " + ([.[] | select(.entity_id|test("^binary_sensor\\.ar_.*_ligado$")) | select(.state=="on") | .attributes.friendly_name] | join(", ") | if .=="" then "nenhum" else . end),
+    "solar agora: " + ([.[] | select(.entity_id=="sensor.solar_potencia") | .state + " W"] | first // "-")'; }
+blog() { sec "Blog rafaelmarconi.com.br"; rsh $BLOG "cd $BLOG_DIR && wp core version && wp core check-update --format=csv 2>/dev/null | tail -n +2 && echo '-- plugins com atualização:' && wp plugin list --update=available --fields=name,version,update_version --format=csv 2>/dev/null | tail -n +2 && echo '-- rascunhos:' && wp post list --post_status=draft --fields=ID,post_title --format=csv | tail -n +2"; }
+case "${1:-all}" in
+  proxmox|pihole|monitor|mediacenter|homeassistant|blog) "$1" ;;
+  all) proxmox; pihole; monitor; mediacenter; homeassistant; blog ;;
+  *) echo "uso: hl-check <proxmox|pihole|monitor|mediacenter|homeassistant|blog|all>"; exit 2 ;;
+esac 2>&1

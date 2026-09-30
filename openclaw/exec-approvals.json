@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "defaults": { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+  "agents": {
+    "*": {
+      "security": "allowlist", "ask": "on-miss", "askFallback": "deny",
+      "allowlist": [
+        { "pattern": "~/.openclaw/tools/homelab/bin/hl-*" },
+        { "pattern": "ls" }, { "pattern": "cat" }, { "pattern": "head" }, { "pattern": "tail" },
+        { "pattern": "grep" }, { "pattern": "wc" }, { "pattern": "jq" }, { "pattern": "date" },
+        { "pattern": "sort" }, { "pattern": "uniq" }, { "pattern": "cut" }, { "pattern": "du" },
+        { "pattern": "df" }, { "pattern": "uptime" }, { "pattern": "mkdir", "argPattern": "^-p [^ ]+$" }
+      ]
+    },
+    "wordpress": {
+      "security": "allowlist", "ask": "on-miss", "askFallback": "deny",
+      "allowlist": [
+        { "pattern": "python3", "argPattern": "^(/home/rmmarconi/\\.openclaw/workspace/agents/wordpress/)?scripts/[a-z_]+\\.py( .*)?$" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# hl-blog-rascunho <arquivo.html> "<título>" "<slugs de categoria, vírgula>" "<tags, vírgula>"
+# Cria um RASCUNHO no rafaelmarconi.com.br (nunca publica). O HTML deve estar em blocos do Gutenberg.
+. "$(dirname "$0")/_hl-common.sh"
+F="${1:-}"; T="${2:-}"; C="${3:-homelab-infra}"; G="${4:-}"
+[ -f "$F" ] && [ -n "$T" ] || { echo "uso: hl-blog-rascunho <arquivo.html> \"<título>\" [categorias] [tags]"; exit 2; }
+case "$(realpath "$F")" in "$HOME"/.openclaw/workspace/*) ;; *) echo "o arquivo precisa estar no workspace do OpenClaw"; exit 2;; esac
+[[ "$C" =~ ^[a-z0-9,-]*$ ]] || { echo "categorias: use slugs (a-z, 0-9, -)"; exit 2; }
+REMOTE=$(printf 'cd %s && id=$(wp post create /tmp/hl-rascunho.html --post_status=draft --post_title=%q --porcelain) && [ -n %q ] && wp post term set "$id" category %s --by=slug >/dev/null; [ -n %q ] && wp post term set "$id" post_tag %q >/dev/null; rm -f /tmp/hl-rascunho.html; echo "rascunho criado: ID $id — https://rafaelmarconi.com.br/?p=$id&preview=true"' \
+  "$BLOG_DIR" "$T" "$C" "$(printf '%s' "$C" | tr , ' ')" "$G" "$G")
+scp -i "$KEY" -o BatchMode=yes -o IdentitiesOnly=yes -P 65002 "$F" u819599816@82.25.72.87:/tmp/hl-rascunho.html && rsh $BLOG "$REMOTE"

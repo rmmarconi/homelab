@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# hl-loki '<LogQL>' [minutos=60] [limite=50]  — logs do Loki (roteador UniFi, NetFlow).
+. "$(dirname "$0")/_hl-common.sh"
+[ -n "${1:-}" ] || { echo "uso: hl-loki '<LogQL>' [minutos] [limite]"; exit 2; }
+MIN="${2:-60}"; LIM="${3:-50}"
+case "$MIN$LIM" in *[!0-9]*) echo "minutos/limite devem ser números"; exit 2;; esac
+curl -sG -m 30 "$LOKI/loki/api/v1/query_range" --data-urlencode "query=$1" \
+  --data-urlencode "start=$(( $(date +%s) - MIN*60 ))000000000" --data-urlencode "limit=$LIM" \
+  | jq -r '.data.result[]? | .stream as $s | .values[] | "\(.[0][0:10] | tonumber | strftime("%d/%m %H:%M")) [\($s.event // $s.category // $s.job)] \(.[1][0:240])"' | sort | tail -n "$LIM"

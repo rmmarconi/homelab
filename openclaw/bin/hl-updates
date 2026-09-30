@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# hl-updates [proxmox|monitor|mediacenter|homeassistant|blog|all] — LISTA atualizações pendentes (não aplica nada).
+. "$(dirname "$0")/_hl-common.sh"
+apt_list() { rsh "$1" 'apt list --upgradable 2>/dev/null | tail -n +2 | cut -d/ -f1 | tr "\n" " "; echo'; }
+t="${1:-all}"
+[[ $t =~ ^(proxmox|all)$ ]]       && { sec "Proxmox (apt)"; apt_list $PVE; }
+[[ $t =~ ^(monitor|all)$ ]]       && { sec "Monitor (apt)"; apt_list $MON; }
+[[ $t =~ ^(mediacenter|all)$ ]]   && { sec "Mediacenter (apt)"; apt_list $MEDIA; }
+[[ $t =~ ^(homeassistant|all)$ ]] && { sec "Home Assistant"; ha_get /api/states | jq -r '.[] | select((.entity_id|startswith("update.")) and .state=="on") | "\(.attributes.friendly_name): \(.attributes.installed_version) -> \(.attributes.latest_version)"'; }
+[[ $t =~ ^(blog|all)$ ]]          && { sec "Blog (WordPress)"; rsh $BLOG "cd $BLOG_DIR && wp core check-update --format=csv 2>/dev/null; wp plugin list --update=available --fields=name,version,update_version --format=csv; wp theme list --update=available --fields=name,version,update_version --format=csv"; }
+true
