@@ -15,7 +15,7 @@ OpenClaw 2026.9.7 na VM 103 (10.1.1.20), modelo **DeepSeek** (v4-pro; v4-flash n
 - `bin/` → `~/.openclaw/tools/homelab/bin/` (comandos `hl-*`: leitura com comandos fixos; `hl-blog-rascunho` cria rascunho).
 - `exec-approvals.json` → `openclaw approvals set --file` : padrão `allowlist` + `ask: on-miss` + `askFallback: deny`.
   Só os `hl-*` e leituras básicas rodam sem aprovação; o resto pede aprovação no Telegram e é negado nas rotinas.
-- `cron-jobs.tsv` → rotinas (`openclaw cron add --declaration-key …`), entrega no último chat do Telegram.
+- `cron-jobs.tsv` → rotinas (`openclaw cron add --declaration-key …`). Entrega: `--channel telegram --to <chat id>` (o id fica em `~/.config/homelab/telegram_chat_id`; `--channel last` não funciona para agentes novos).
 - `agents/*/AGENTS.md` → instruções de cada agente; `main-homelab.md` é anexado ao AGENTS.md do `main`.
 
 ## Acesso (feito pelo Rafael, uma vez)

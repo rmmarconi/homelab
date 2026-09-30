@@ -12,7 +12,7 @@ proxmox() { sec "Proxmox"; rsh $PVE '
   echo "-- SSD"; smartctl -H -A /dev/sda 2>/dev/null | grep -E "result|Reallocated|Pending|Temperature|UDMA_CRC"
   echo "-- memória"; free -m | sed -n 2p
   echo "-- atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'; }
-pihole() { sec "Pi-hole"; rsh $PVE 'for c in 100 101; do echo "LXC $c: $(pct exec $c -- pihole status 2>&1 | tr "\n" " " | cut -c1-160)"; done'; }
+pihole() { sec "Pi-hole"; rsh $PVE 'for c in 100 101; do echo "LXC $c: $(pct exec $c -- env PATH=/usr/local/bin:/usr/bin:/bin pihole status 2>&1 | tr "\n" " " | cut -c1-160)"; done'; }
 monitor() { sec "Monitor (10.1.1.15)"; rsh $MON 'uptime -p; free -m | sed -n 2p; df -h / | tail -1; docker ps --format "{{.Names}} {{.Status}}" | sort; echo "atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'
   echo "-- alvos do Prometheus fora do ar:"; curl -s -m 10 "$PROM/api/v1/targets" | jq -r '.data.activeTargets[] | select(.health!="up") | "  \(.labels.job)/\(.labels.instance) \(.lastError)"'; }
 mediacenter() { sec "Mediacenter (10.1.1.100)"; rsh $MEDIA '
