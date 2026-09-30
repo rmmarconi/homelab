@@ -1,0 +1,13 @@
+#!/bin/sh
+# Regrava o cabeçalho de autenticação usado pelo nginx a partir do openclaw.json,
+# sem exibir o token. Rode de novo se o token do gateway mudar.
+set -eu
+CFG=/home/rmmarconi/.openclaw/openclaw.json
+DST=/etc/nginx/openclaw-metrics-auth.conf
+umask 077
+TOKEN=$(jq -r '.gateway.auth.token // empty' "$CFG")
+[ -n "$TOKEN" ] || { echo "token do gateway não encontrado" >&2; exit 1; }
+printf 'proxy_set_header Authorization "Bearer %s";\n' "$TOKEN" > "$DST.tmp"
+chown root:root "$DST.tmp"; chmod 600 "$DST.tmp"; mv "$DST.tmp" "$DST"
+nginx -t -q && systemctl reload nginx
+echo "ok: $DST atualizado e nginx recarregado"

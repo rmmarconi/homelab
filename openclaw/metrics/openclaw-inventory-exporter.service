@@ -1,0 +1,7 @@
+[Unit]
+Description=Métricas de inventário do OpenClaw (textfile do node-exporter)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/openclaw-inventory-exporter
+Nice=10

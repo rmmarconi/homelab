@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""hl-grafana — dashboards do Grafana (VM monitor) pela API, com a conta de serviço "openclaw".
+
+  hl-grafana list [texto]                 lista dashboards (uid, pasta, título)
+  hl-grafana get <uid> [saida.json]       baixa o JSON do dashboard
+  hl-grafana validate <arquivo.json>      roda cada consulta no Prometheus e aponta erro / sem dados
+  hl-grafana push <arquivo.json> [pasta]  cria ou atualiza (padrão: pasta "openclaw"; mensagem de versão automática)
+  hl-grafana metrics [prefixo]            lista nomes de métricas existentes (padrão: openclaw_)
+
+Só mexe em dashboards: a conta tem papel Editor e o token fica em
+~/.config/homelab/grafana_token (600). Nunca imprime o token.
+Arquivos precisam estar dentro de ~/.openclaw/workspace*.
+"""
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+GRAFANA = "http://10.1.1.15:3000"
+PROM = "http://10.1.1.15:9090"
+TOKEN_FILE = os.path.expanduser("~/.config/homelab/grafana_token")
+WS = os.path.realpath(os.path.expanduser("~/.openclaw"))
+
+
+def req(url, data=None, method=None, auth=True):
+    h = {"Content-Type": "application/json", "Accept": "application/json"}
+    if auth:
+        h["Authorization"] = "Bearer " + open(TOKEN_FILE).read().strip()
+    body = json.dumps(data).encode() if data is not None else None
+    r = urllib.request.Request(url, data=body, headers=h, method=method)
+    try:
+        with urllib.request.urlopen(r, timeout=30) as resp:
+            return json.loads(resp.read() or b"null")
+    except urllib.error.HTTPError as e:
+        sys.exit(f"erro HTTP {e.code}: {e.read().decode(errors='replace')[:400]}")
+
+
+def dentro_do_workspace(p):
+    rp = os.path.realpath(p)
+    if not rp.startswith(WS + "/workspace"):
+        sys.exit(f"o arquivo precisa estar em {WS}/workspace*: {p}")
+    return rp
+
+
+def carregar(p):
+    d = json.load(open(dentro_do_workspace(p)))
+    return d.get("dashboard", d)
+
+
+def paineis(dash):
+    for p in dash.get("panels", []):
+        yield p
+        yield from p.get("panels", [])  # linhas recolhidas
+
+
+def expr_para_teste(expr, dash):
+    # troca as variáveis do Grafana por valores neutros para a consulta instantânea
+    e = re.sub(r"\$__rate_interval|\$__interval|\$__range|\$interval", "5m", expr)
+    for v in dash.get("templating", {}).get("list", []):
+        n = re.escape(v["name"])
+        e = re.sub(r'="\$\{?' + n + r'(:\w+)?\}?"', '=~".*"', e)   # label="$var" vira regex livre
+        e = re.sub(r"\$\{?" + n + r"(:\w+)?\}?", ".*", e)
+    return e
+
+
+def validate(path):
+    dash = carregar(path)
+    total = erros = vazios = 0
+    for p in paineis(dash):
+        for t in p.get("targets", []) or []:
+            expr = t.get("expr")
+            if not expr:
+                continue
+            total += 1
+            q = expr_para_teste(expr, dash)
+            r = req(PROM + "/api/v1/query?" + urllib.parse.urlencode({"query": q}), auth=False)
+            titulo = p.get("title", "?")
+            if r.get("status") != "success":
+                erros += 1
+                print(f"ERRO   [{titulo}] {expr}\n       {r.get('error')}")
+            elif not r["data"]["result"]:
+                vazios += 1
+                print(f"VAZIO  [{titulo}] {expr}")
+    print(f"\n{total} consultas · {erros} com erro · {vazios} sem dados agora")
+    print("(sem dados pode ser normal: contador ainda zerado, erro que não aconteceu, filtro de variável)")
+    sys.exit(1 if erros else 0)
+
+
+def push(path, folder="openclaw"):
+    dash = carregar(path)
+    dash.pop("id", None)
+    if not dash.get("uid"):
+        sys.exit("o dashboard precisa de um uid fixo (ex.: \"openclaw-overview\")")
+    r = req(GRAFANA + "/api/dashboards/db", {
+        "dashboard": dash, "folderUid": folder, "overwrite": True,
+        "message": "atualizado pelo OpenClaw (hl-grafana)"}, method="POST")
+    print(f"ok: {r.get('status')} versão {r.get('version')} → {GRAFANA}{r.get('url')}")
+
+
+def main():
+    a = sys.argv[1:]
+    if not a or a[0] in ("-h", "--help"):
+        print(__doc__)
+        return
+    cmd = a[0]
+    if cmd == "list":
+        for d in req(GRAFANA + "/api/search?" + urllib.parse.urlencode({"type": "dash-db", "query": a[1] if len(a) > 1 else ""})):
+            print(f"{d['uid']:<28} {d.get('folderTitle', 'General'):<16} {d['title']}")
+    elif cmd == "get" and len(a) >= 2:
+        d = req(f"{GRAFANA}/api/dashboards/uid/{urllib.parse.quote(a[1])}")
+        out = json.dumps(d["dashboard"], indent=2, ensure_ascii=False)
+        if len(a) > 2:
+            destino = os.path.abspath(a[2])
+            dentro_do_workspace(os.path.dirname(destino) + "/")
+            with open(destino, "w") as f:
+                f.write(out)
+            print(f"salvo em {a[2]} (pasta: {d['meta'].get('folderTitle')})")
+        else:
+            print(out)
+    elif cmd == "validate" and len(a) == 2:
+        validate(a[1])
+    elif cmd == "push" and len(a) in (2, 3):
+        push(a[1], *(a[2:]))
+    elif cmd == "metrics":
+        pre = a[1] if len(a) > 1 else "openclaw_"
+        for n in req(PROM + "/api/v1/label/__name__/values", auth=False)["data"]:
+            if n.startswith(pre):
+                print(n)
+    else:
+        print(__doc__)
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()

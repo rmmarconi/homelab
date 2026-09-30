@@ -33,6 +33,18 @@ scrape_configs:
         labels: {instance: pihole-2}
       - targets: ["10.1.1.100:9100"]
         labels: {instance: mediacenter}
+      # VM do OpenClaw: sistema + textfile openclaw.prom (agentes, rotinas, execuções, tokens)
+      - targets: ["10.1.1.20:9100"]
+        labels: {instance: openclaw}
+
+  # Runtime do gateway OpenClaw (plugin diagnostics-prometheus). O nginx da VM
+  # injeta o token do gateway e só aceita o monitor; nenhum segredo aqui.
+  # Os contadores zeram quando o gateway reinicia: use increase()/rate().
+  - job_name: openclaw
+    metrics_path: /api/diagnostics/prometheus
+    static_configs:
+      - targets: ["10.1.1.20:18790"]
+        labels: {instance: openclaw}
 
   - job_name: pihole
     static_configs:

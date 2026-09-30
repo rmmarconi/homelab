@@ -1,0 +1,10 @@
+[Unit]
+Description=Coleta as métricas de inventário do OpenClaw a cada 5 min
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target

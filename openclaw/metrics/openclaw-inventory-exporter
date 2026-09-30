@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Métricas de inventário do OpenClaw para o textfile collector do node-exporter.
+
+Complementa o plugin diagnostics-prometheus (runtime: tokens, custo, latência),
+que zera a cada restart do gateway. Aqui vem o que é persistente:
+agentes, rotinas (cron), histórico de execuções e tokens por sessão.
+
+Só leitura: CLI do OpenClaw com --json e o SQLite de estado em modo ro.
+Roda a cada 5 min pelo openclaw-inventory-exporter.timer (systemd --user).
+"""
+import json
+import os
+import sqlite3
+import subprocess
+import sys
+import time
+
+OUT = "/var/lib/prometheus/node-exporter/openclaw.prom"
+HOME = os.path.expanduser("~")
+STATE = f"{HOME}/.openclaw/state/openclaw.sqlite"
+OC = f"{HOME}/.npm-global/bin/openclaw"
+
+
+def cli(*args):
+    r = subprocess.run([OC, *args, "--json"], capture_output=True, text=True, timeout=90)
+    out = r.stdout.strip()
+    # alguns comandos imprimem avisos depois do JSON; fica só o primeiro documento
+    return json.JSONDecoder().raw_decode(out)[0]
+
+
+def esc(v):
+    return str(v).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+
+
+class Out:
+    def __init__(self):
+        self.lines, self.seen = [], set()
+
+    def add(self, metric, value, help_, mtype="gauge", **labels):
+        if metric not in self.seen:
+            self.lines += [f"# HELP {metric} {help_}", f"# TYPE {metric} {mtype}"]
+            self.seen.add(metric)
+        lab = ",".join(f'{k}="{esc(v)}"' for k, v in labels.items())
+        self.lines.append(f"{metric}{{{lab}}} {value}" if lab else f"{metric} {value}")
+
+
+def main():
+    o, ok = Out(), 1
+    t0 = time.time()
+
+    # agentes
+    try:
+        cfg = json.load(open(f"{HOME}/.openclaw/openclaw.json"))
+        default = (cfg["agents"].get("defaults", {}).get("model") or {}).get("primary", "")
+        entries = cfg["agents"].get("entries", {})
+        o.add("openclaw_agents", len(entries), "Agentes configurados")
+        for aid, a in entries.items():
+            m = a.get("model") or default
+            o.add("openclaw_agent_info", 1, "Agente configurado (1 por agente)",
+                  agent=aid, agent_name=a.get("name", aid), model=m if isinstance(m, str) else m.get("primary", ""))
+    except Exception as e:  # uma fonte com erro não derruba as outras
+        ok = 0
+        print(f"agents: {e}", file=sys.stderr)
+
+    # rotinas
+    try:
+        db = sqlite3.connect(f"file:{STATE}?mode=ro", uri=True, timeout=5)
+        jobs = []
+        for jid, name, enabled, agent, sj in db.execute(
+                "select job_id, name, enabled, coalesce(agent_id, owner_agent_id), state_json from cron_jobs"):
+            jobs.append({"id": jid, "name": name, "enabled": bool(enabled), "agentId": agent,
+                         "state": json.loads(sj) if sj else {}})
+        db.close()
+        o.add("openclaw_cron_jobs", len(jobs), "Rotinas agendadas (todas)")
+        o.add("openclaw_cron_jobs_enabled", sum(1 for j in jobs if j.get("enabled")), "Rotinas habilitadas")
+        for j in jobs:
+            st = j.get("state", {})
+            lab = dict(routine=j.get("name") or j["id"], job_id=j["id"], agent=j.get("effectiveAgentId") or j.get("agentId") or "")
+            o.add("openclaw_cron_job_enabled", int(bool(j.get("enabled"))), "Rotina habilitada (1/0)", **lab)
+            o.add("openclaw_cron_job_last_status", 1, "Último status da rotina", status=st.get("lastRunStatus") or "never", **lab)
+            o.add("openclaw_cron_job_consecutive_errors", st.get("consecutiveErrors", 0), "Erros seguidos da rotina", **lab)
+            if st.get("lastRunAtMs"):
+                o.add("openclaw_cron_job_last_run_timestamp_seconds", st["lastRunAtMs"] / 1000, "Última execução (epoch)", **lab)
+            if st.get("nextRunAtMs"):
+                o.add("openclaw_cron_job_next_run_timestamp_seconds", st["nextRunAtMs"] / 1000, "Próxima execução (epoch)", **lab)
+            if st.get("lastDurationMs") is not None:
+                o.add("openclaw_cron_job_last_duration_seconds", st["lastDurationMs"] / 1000, "Duração da última execução", **lab)
+            o.add("openclaw_cron_job_last_delivery", 1, "Status da última entrega",
+                  delivery=st.get("lastDeliveryStatus") or "none", **lab)
+    except Exception as e:
+        ok = 0
+        print(f"cron: {e}", file=sys.stderr)
+
+    # histórico persistente (SQLite, somente leitura)
+    try:
+        db = sqlite3.connect(f"file:{STATE}?mode=ro", uri=True, timeout=5)
+        names = {}
+        try:
+            names = {j["id"]: j.get("name") or j["id"] for j in jobs}
+        except NameError:
+            pass
+        for job_id, agent, status, n, dur in db.execute(
+                "select job_id, agent_id, status, count(*), sum(coalesce(finished_at_ms-started_at_ms,0)) "
+                "from cron_run_receipts group by 1,2,3"):
+            lab = dict(routine=names.get(job_id, job_id), job_id=job_id, agent=agent or "", status=status or "unknown")
+            o.add("openclaw_cron_runs_total", n, "Execuções de rotinas por status (histórico)", mtype="counter", **lab)
+            o.add("openclaw_cron_run_duration_seconds_total", (dur or 0) / 1000, "Tempo total de execução das rotinas", mtype="counter", **lab)
+        agora = int(time.time() * 1000)
+        for janela, ms in (("24h", 86400e3), ("7d", 7 * 86400e3), ("30d", 30 * 86400e3)):
+            for agent, status, n in db.execute(
+                    "select coalesce(agent_id,''), coalesce(status,'unknown'), count(*) from cron_run_receipts "
+                    "where started_at_ms >= ? group by 1,2", (agora - ms,)):
+                o.add("openclaw_cron_runs_window", n, "Execuções de rotinas na janela (24h, 7d, 30d)",
+                      window=janela, agent=agent, status=status)
+        for agent, kind, status, n in db.execute(
+                "select coalesce(agent_id,''), coalesce(task_kind,''), coalesce(status,''), count(*) from task_runs group by 1,2,3"):
+            o.add("openclaw_task_runs_total", n, "Tarefas (subagentes, fluxos) por status", mtype="counter",
+                  agent=agent, task_kind=kind, status=status)
+        db.close()
+    except Exception as e:
+        ok = 0
+        print(f"sqlite: {e}", file=sys.stderr)
+
+    # sessões e tokens acumulados (persistem entre restarts do gateway)
+    try:
+        d = cli("sessions", "list", "--all-agents", "--limit", "all")
+        sess = d.get("sessions", d) if isinstance(d, dict) else d
+        agg = {}
+        for s in sess:
+            k = (s.get("agentId") or "", s.get("kind") or "", s.get("modelProvider") or "", s.get("model") or "")
+            a = agg.setdefault(k, {"n": 0, "input": 0, "output": 0, "total": 0})
+            a["n"] += 1
+            for t in ("input", "output", "total"):
+                a[t] += s.get(f"{t}Tokens") or 0
+        for (agent, kind, prov, model), a in agg.items():
+            lab = dict(agent=agent, session_kind=kind, provider=prov, model=model)
+            o.add("openclaw_sessions", a["n"], "Sessões existentes", **lab)
+            for t in ("input", "output", "total"):
+                o.add("openclaw_session_tokens", a[t], "Tokens acumulados nas sessões existentes", token_type=t, **lab)
+        now = time.time() * 1000
+        o.add("openclaw_sessions_active_1h", sum(1 for s in sess if now - (s.get("updatedAt") or 0) < 3600e3),
+              "Sessões com atividade na última hora")
+    except Exception as e:
+        ok = 0
+        print(f"sessions: {e}", file=sys.stderr)
+
+    o.add("openclaw_inventory_exporter_success", ok, "1 se todas as fontes foram lidas")
+    o.add("openclaw_inventory_exporter_duration_seconds", round(time.time() - t0, 3), "Duração da coleta")
+    o.add("openclaw_inventory_exporter_last_run_timestamp_seconds", int(time.time()), "Última coleta (epoch)")
+
+    tmp = OUT + ".tmp"
+    with open(tmp, "w") as f:
+        f.write("\n".join(o.lines) + "\n")
+    os.replace(tmp, OUT)
+
+
+if __name__ == "__main__":
+    main()
