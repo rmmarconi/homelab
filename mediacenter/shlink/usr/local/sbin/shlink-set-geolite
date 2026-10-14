@@ -1,0 +1,14 @@
+#!/bin/sh
+# Grava a license key da MaxMind (GeoLite2) no pool do Shlink sem ecoar nem ir para o histórico,
+# recarrega o php-fpm e baixa a base. Uso: sudo shlink-set-geolite
+set -eu
+POOL=/etc/php/8.4/fpm/pool.d/shlink.conf
+[ "$(id -u)" -eq 0 ] || { echo "use: sudo shlink-set-geolite" >&2; exit 1; }
+printf "License key da MaxMind: " >&2; stty -echo; read -r KEY; stty echo; echo >&2
+[ -n "$KEY" ] || { echo "vazia, nada feito" >&2; exit 1; }
+TMP=$(mktemp); chmod 600 "$TMP"
+grep -v "GEOLITE_LICENSE_KEY" "$POOL" > "$TMP"
+printf "env[GEOLITE_LICENSE_KEY] = %s\n" "$KEY" >> "$TMP"; unset KEY
+cat "$TMP" > "$POOL"; rm -f "$TMP"; chmod 640 "$POOL"
+php-fpm8.4 -t 2>/dev/null && systemctl reload php8.4-fpm
+shlink visit:download-db -n && shlink visit:locate -n && echo "GeoLite2 ativo."

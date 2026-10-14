@@ -1,0 +1,7 @@
+# Shlink — tarefas recomendadas para servidor web clássico (php-fpm)
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# geolocaliza visitas pendentes (o Shlink também faz isso no redirect; aqui é a garantia)
+7 * * * *  root  shlink visit:locate -q -n
+# atualiza a base GeoLite2 (só funciona com a license key da MaxMind)
+30 4 * * 0 root  shlink visit:download-db -q -n

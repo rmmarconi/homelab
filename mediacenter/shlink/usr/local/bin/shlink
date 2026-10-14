@@ -1,0 +1,9 @@
+#!/bin/sh
+# CLI do Shlink com o mesmo ambiente do pool PHP-FPM. Uso: sudo shlink <comando>
+set -eu
+POOL=/etc/php/8.4/fpm/pool.d/shlink.conf
+[ "$(id -u)" -eq 0 ] || { echo "use: sudo shlink $*" >&2; exit 1; }
+ENVS=$(sed -n "s/^env\[\([A-Z_]*\)\] *= *\(.*\)$/\1=\2/p" "$POOL")
+cd /opt/shlink
+# shellcheck disable=SC2086
+exec setpriv --reuid=shlink --regid=shlink --init-groups env -i PATH=/usr/bin:/bin HOME=/opt/shlink $ENVS php bin/cli "$@"
