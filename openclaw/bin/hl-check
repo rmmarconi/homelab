@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hl-check <proxmox|pihole|monitor|mediacenter|homeassistant|blog|all> — verificação de saúde (leitura).
+# hl-check <proxmox|dns|monitor|mediacenter|homeassistant|blog|all> — verificação de saúde (leitura).
 . "$(dirname "$0")/_hl-common.sh"
 proxmox() { sec "Proxmox"; rsh $PVE '
   pveversion | head -1; uptime -p
@@ -12,7 +12,11 @@ proxmox() { sec "Proxmox"; rsh $PVE '
   echo "-- SSD"; smartctl -H -A /dev/sda 2>/dev/null | grep -E "result|Reallocated|Pending|Temperature|UDMA_CRC"
   echo "-- memória"; free -m | sed -n 2p
   echo "-- atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'; }
-pihole() { sec "Pi-hole"; rsh $PVE 'for c in 100 101; do echo "LXC $c: $(pct exec $c -- env PATH=/usr/local/bin:/usr/bin:/bin pihole status 2>&1 | tr "\n" " " | cut -c1-160)"; done'; }
+dns() { sec "DNS — AdGuard Home (LXC 107 adguard-1 10.1.1.3, LXC 108 adguard-2 10.1.1.4)"; rsh $PVE 'for c in 107 108; do echo "LXC $c: AdGuardHome=$(pct exec $c -- systemctl is-active AdGuardHome) $( [ $c = 107 ] && echo sync=$(pct exec 107 -- systemctl is-active adguardhome-sync))"; done
+  for s in 3 4; do echo "10.1.1.$s google.com=$(dig +short +time=3 @10.1.1.$s google.com A | grep -m1 -E "^[0-9.]+$") doubleclick.net=$(dig +short +time=3 @10.1.1.$s doubleclick.net A | head -1)"; done
+  echo "-- última sincronização:"; pct exec 107 -- journalctl -u adguardhome-sync --no-pager -n 50 2>/dev/null | grep -E "Sync done|ERROR" | tail -1 | cut -c1-160'
+  echo "-- métricas (Prometheus, job adguard):"; curl -s -m 10 "$PROM/api/v1/query" --data-urlencode 'query=up{job="adguard"}' | jq -r '.data.result[] | "  exporter up=\(.value[1])"'; }
+pihole() { dns; }  # alias antigo: os Pi-holes (LXC 100/101) foram trocados pelo AdGuard Home em 2026-10-20
 monitor() { sec "Monitor (10.1.1.15)"; rsh $MON 'uptime -p; free -m | sed -n 2p; df -h / | tail -1; docker ps --format "{{.Names}} {{.Status}}" | sort; echo "atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'
   echo "-- alvos do Prometheus fora do ar:"; curl -s -m 10 "$PROM/api/v1/targets" | jq -r '.data.activeTargets[] | select(.health!="up") | "  \(.labels.job)/\(.labels.instance) \(.lastError)"'; }
 mediacenter() { sec "Mediacenter (10.1.1.100)"; rsh $MEDIA '
@@ -29,7 +33,7 @@ homeassistant() { sec "Home Assistant"; ha_get /api/config | jq -r '"versão \(.
     "solar agora: " + ([.[] | select(.entity_id=="sensor.solar_potencia") | .state + " W"] | first // "-")'; }
 blog() { sec "Blog rafaelmarconi.com.br"; rsh $BLOG "cd $BLOG_DIR && wp core version && wp core check-update --format=csv 2>/dev/null | tail -n +2 && echo '-- plugins com atualização:' && wp plugin list --update=available --fields=name,version,update_version --format=csv 2>/dev/null | tail -n +2 && echo '-- rascunhos:' && wp post list --post_status=draft --fields=ID,post_title --format=csv | tail -n +2"; }
 case "${1:-all}" in
-  proxmox|pihole|monitor|mediacenter|homeassistant|blog) "$1" ;;
-  all) proxmox; pihole; monitor; mediacenter; homeassistant; blog ;;
-  *) echo "uso: hl-check <proxmox|pihole|monitor|mediacenter|homeassistant|blog|all>"; exit 2 ;;
+  proxmox|dns|pihole|monitor|mediacenter|homeassistant|blog) "$1" ;;
+  all) proxmox; dns; monitor; mediacenter; homeassistant; blog ;;
+  *) echo "uso: hl-check <proxmox|dns|monitor|mediacenter|homeassistant|blog|all>"; exit 2 ;;
 esac 2>&1

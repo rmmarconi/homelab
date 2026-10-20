@@ -6,8 +6,8 @@ Stack de observabilidade do homelab rodando em uma VM Ubuntu 26.04 (2 vCPU, 4 GB
                  ┌──────────────── VM monitor (10.1.1.15) ────────────────┐
 UniFi API  ────► │ UnPoller ─┐                                            │
 Proxmox API ───► │ pve-exporter ─┤                                        │
-Pi-hole API ───► │ pihole-exporter ─┼──► Prometheus ──┐                   │
-node-exporter ─► │ (pve, piholes, VM) ┘                │                  │
+AdGuard API ───► │ adguard-exporter ┼──► Prometheus ──┐                   │
+node-exporter ─► │ (pve, adguards, VM) ┘               │                  │
                  │                                     ├──► Grafana :3000 │
 UniFi SIEM ────► │ :514  ┐                             │                  │
  (CEF/syslog)    │       ├──► Vector ──► Loki ─────────┘                  │
@@ -23,7 +23,7 @@ UniFi NetFlow ─► │ :2055 ─► GoFlow2 ┘   └──► métricas NetFl
 | Vector | `timberio/vector` | recebe syslog/CEF da UniFi e fluxos do GoFlow2, envia ao Loki e gera métricas | 514/udp+tcp, 9598 (interna) |
 | GoFlow2 | `netsampler/goflow2` | coletor NetFlow v5/v9, IPFIX e sFlow | 2055/udp, 6343/udp |
 | pve-exporter | `prompve/prometheus-pve-exporter` | VMs, containers e storages do Proxmox | 9221 (interna) |
-| pihole-exporter | `ekofr/pihole-exporter` | estatísticas DNS dos Pi-holes v6 | 9617 (interna) |
+| adguard-exporter | `ghcr.io/henrywhitaker3/adguard-exporter` | estatísticas DNS dos dois AdGuard Home | 9618 (interna) |
 | node-exporter | `prom/node-exporter` | métricas do host (VM) | 9100 (interna) |
 | Grafana | `grafana/grafana` | dashboards | 3000 |
 
@@ -55,7 +55,7 @@ cp .env.example .env && chmod 600 .env
 Ajuste para a sua rede:
 
 - `prometheus/prometheus.yml` — IPs do Proxmox e dos Pi-holes; o `metric_relabel_configs` do job `unpoller` mapeia interface → nome da WAN (`eth1` = Go Internet, `eth4` = Eletrodata no UCG Fiber). Descubra o seu com `unpoller_device_port_*` (label `port_ip`) e um `whois` no IP público.
-- `docker-compose.yml` — `PIHOLE_HOSTNAME` do pihole-exporter.
+- `docker-compose.yml` — `ADGUARD_SERVERS` do adguard-exporter.
 - `vector/vector.yaml` — `local_nets`: inclua o seu prefixo IPv6 público delegado no lugar de `2001:db8::/56`, senão o tráfego IPv6 dos clientes é classificado como "externo".
 
 Grave os segredos sem digitá-los na linha de comando:
@@ -63,7 +63,7 @@ Grave os segredos sem digitá-los na linha de comando:
 ```bash
 ./scripts/set-secret.sh GF_SECURITY_ADMIN_PASSWORD
 ./scripts/set-secret.sh UP_UNIFI_DEFAULT_PASS
-./scripts/set-secret.sh PIHOLE_PASSWORD        # senha1,senha2 (uma por Pi-hole)
+./scripts/set-secret.sh ADGUARD_PASSWORDS      # senha1,senha2 (uma por AdGuard)
 ./scripts/set-secret.sh PVE_TOKEN_VALUE
 docker compose up -d
 ```

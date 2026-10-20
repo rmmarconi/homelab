@@ -4,7 +4,7 @@ Infraestrutura do meu homelab: um Proxmox VE em um Lenovo ThinkCentre Tiny (i7-4
 
 | Pasta | Conteúdo | Status |
 |---|---|---|
-| [`monitoring/`](monitoring/) | Prometheus, Grafana, Loki, Vector, UnPoller, GoFlow2 e exporters de Proxmox/Pi-hole em Docker Compose | ✅ em produção |
+| [`monitoring/`](monitoring/) | Prometheus, Grafana, Loki, Vector, UnPoller, GoFlow2 e exporters de Proxmox/AdGuard em Docker Compose | ✅ em produção |
 | `ansible/` | configuração dos hosts e deploy da stack | 🚧 próximo passo |
 | `terraform/` | criação das VMs/LXC no Proxmox | 🚧 próximo passo |
 
@@ -21,7 +21,7 @@ e foi removido (ver histórico do git, pasta `iot/`).
 | Host | IP | Função |
 |---|---|---|
 | pve | 10.1.1.254 | Proxmox VE 9 |
-| pihole-1 / pihole-2 | 10.1.1.3 / 10.1.1.4 | DNS (LXC), sincronizados por nebula-sync |
+| adguard-1 / adguard-2 | 10.1.1.3 / 10.1.1.4 | DNS: AdGuard Home (LXC 107/108), sincronizados por adguardhome-sync — ver [`dns-adguard/`](dns-adguard/) |
 | homeassistant | 10.1.1.11 (+ 10.1.0.233 default, 10.1.2.204 IoT) | Home Assistant OS (VM 105) |
 | openclaw | 10.1.1.20 | VM (desligada) |
 | monitor | 10.1.1.15 | VM Ubuntu 26.04 com a stack de monitoramento |

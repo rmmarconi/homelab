@@ -1,0 +1,97 @@
+{
+ "filters": [
+  {
+   "name": "HaGeZi doh",
+   "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/doh.txt"
+  },
+  {
+   "name": "HaGeZi pro",
+   "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/pro.txt"
+  },
+  {
+   "name": "zangadoprojets Bets",
+   "url": "https://github.com/zangadoprojets/pi-hole-block-list/raw/main/Bets.txt"
+  },
+  {
+   "name": "zangadoprojets Malicious",
+   "url": "https://github.com/zangadoprojets/pi-hole-block-list/raw/main/Malicious.txt"
+  },
+  {
+   "name": "zangadoprojets Telemetry",
+   "url": "https://github.com/zangadoprojets/pi-hole-block-list/raw/main/Telemetry.txt"
+  },
+  {
+   "name": "zangadoprojets youtube",
+   "url": "https://github.com/zangadoprojets/pi-hole-block-list/raw/main/youtube.txt"
+  },
+  {
+   "name": "StevenBlack hosts",
+   "url": "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+  }
+ ],
+ "user_rules": [
+  "! Migrado do Pi-hole em 2026-10-20. $important = mesma prioridade do Pi-hole:",
+  "! liberações vencem tudo; bloqueios vencem as listas.",
+  "@@|a2h4lv5giz1jft.us-east-1.prod.service.minerva.devices.a2z.com^$important",
+  "@@|accounts.us1.gigya.com^$important",
+  "@@|api.mapbox.com^$important",
+  "@@|boards.greenhouse.io^$important",
+  "@@|c.spl.greenhouse.io^$important",
+  "@@|dgb.fusionpool.pro^$important",
+  "@@|events.mapbox.com^$important",
+  "@@|firebaseremoteconfig.googleapis.com^$important",
+  "@@|go.microsoft.com^$important",
+  "@@|mparticle.weather.com^$important",
+  "@@|nrdp.logs.netflix.com^$important",
+  "@@|ping.ui.com^$important",
+  "@@|self.events.data.microsoft.com^$important",
+  "@@|settings-win.data.microsoft.com^$important",
+  "@@|solo.ckpool.org^$important",
+  "@@|teste.com^$important",
+  "@@|v10.events.data.microsoft.com^$important",
+  "@@|weather.com^$important",
+  "@@|www.fbsbx.com^$important",
+  "|adclick.g.doubleclick.net^$important",
+  "|doubleclick.net^$important",
+  "|graph-fallback.facebook.com^$important",
+  "|pagead2.googlesyndication.com^$important",
+  "|securepubads.g.doubleclick.net^$important",
+  "||doubleclick.net^$important",
+  "||mgid.com^$important",
+  "||outbrain.com^$important",
+  "||taboola.com^$important"
+ ],
+ "dns": {
+  "upstream_dns": [
+   "8.8.8.8",
+   "1.1.1.1"
+  ],
+  "bootstrap_dns": [
+   "8.8.8.8",
+   "1.1.1.1"
+  ],
+  "local_ptr_upstreams": [
+   "10.1.1.1"
+  ],
+  "use_private_ptr_resolvers": true,
+  "resolve_clients": true,
+  "ratelimit": 30,
+  "dnssec_enabled": false,
+  "upstream_mode": "load_balance"
+ },
+ "querylog": {
+  "enabled": true,
+  "interval": 604800000,
+  "anonymize_client_ip": false,
+  "ignored": []
+ },
+ "stats": {
+  "enabled": true,
+  "interval": 604800000,
+  "ignored": []
+ },
+ "filtering": {
+  "enabled": true,
+  "interval": 24
+ }
+}

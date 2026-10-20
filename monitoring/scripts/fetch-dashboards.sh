@@ -7,7 +7,7 @@ command -v jq >/dev/null || { echo "instale o jq"; exit 1; }
 
 declare -A DASH=(
   [11310]=unifi [11311]=unifi [11312]=unifi [11313]=unifi [11314]=unifi [11315]=unifi [23027]=unifi
-  [1860]=sistema [10347]=proxmox [10176]=pihole
+  [1860]=sistema [10347]=proxmox
 )
 
 for id in "${!DASH[@]}"; do

@@ -1,4 +1,4 @@
-# Rede (UniFi) e DNS (Pi-hole)
+# Rede (UniFi) e DNS (AdGuard Home)
 
 ## UniFi — somente observação
 Os dados vêm do **UnPoller** no Prometheus e dos **eventos do roteador** no Loki. Nenhum agente tem credencial do UniFi, e nenhum deve ter.
@@ -8,7 +8,10 @@ Os dados vêm do **UnPoller** no Prometheus e dos **eventos do roteador** no Lok
 - Logs do roteador (LogQL): `{job="unifi"}` com labels `category`, `event`, `severity`.
 - NetFlow: `netflow_bytes_total{direction,local_ip,service}`.
 
-## Pi-hole (LXC 100 e 101)
-- Acesso: `pct exec 100 -- pihole <cmd>` no Proxmox (sem senha).
-- **Problema conhecido:** listas diferentes entre os dois (pihole-1 ~79 mil domínios, pihole-2 ~1,37 milhão). O nebula-sync (LXC 106) não está sincronizando as listas/gravity. Investigar e propor correção.
-- Métricas: `pihole_dns_queries_today`, `pihole_ads_percentage_today`, `pihole_domains_being_blocked`.
+## DNS — AdGuard Home (LXC 107 adguard-1 e 108 adguard-2)
+- Substituiu os Pi-holes em 2026-10-20, com os mesmos IPs (10.1.1.3/.4), IPv6, MACs e VLAN. Pi-holes (100/101) e nebula-sync (106) ficam **parados**.
+- Saúde: `~/.openclaw/tools/homelab/bin/hl-check dns` (serviço, resolução, bloqueio, última sincronização).
+- Sincronização: `adguardhome-sync` no adguard-1 copia tudo para o adguard-2 a cada 10 min. Ele ativa listas mesmo que estejam desativadas na origem: para tirar uma lista, **remover**.
+- **Nunca** readicionar `zangadoprojets/Adsandtrackers`: tem linhas `.com` que bloqueiam a internet inteira no AdGuard.
+- Métricas: job `adguard` (adguard-exporter), prefixo `adguard_`; node-exporter com `instance=adguard-1/2`.
+- Painel web: http://10.1.1.3 e http://10.1.1.4 (usuário admin; senha só com o Rafael).

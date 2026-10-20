@@ -18,8 +18,8 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards/proxmox
-  - name: Pi-hole
-    folder: Pi-hole
+  - name: AdGuard
+    folder: AdGuard
     type: file
     allowUiUpdates: true
     options:

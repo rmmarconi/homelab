@@ -7,7 +7,7 @@ Docker Compose em `/opt/monitoring` (fonte: `monitoring/` no repositório).
 | Prometheus | 9090 | métricas (90 dias) |
 | Loki | 3100 | logs (30 dias) — roteador UniFi e NetFlow |
 | Grafana | 3000 | dashboards |
-| UnPoller, GoFlow2, Vector, pve-exporter, pihole-exporter, qbittorrent/jellyfin exporters, blackbox | internos | coletores |
+| UnPoller, GoFlow2, Vector, pve-exporter, adguard-exporter, qbittorrent/jellyfin exporters, blackbox | internos | coletores |
 
 ## Consultas prontas
 - Alvos fora: `up == 0`
@@ -20,4 +20,4 @@ Docker Compose em `/opt/monitoring` (fonte: `monitoring/` no repositório).
 - Sondas HTTP: `probe_success{job="blackbox"}`
 
 ## Limiares de alerta
-CPU Proxmox > 70 °C · thin pool > 80% · `/data` > 85% · disco > 55 °C · qualquer `up == 0` por > 10 min · Pi-hole parado · boot inesperado do Proxmox.
+CPU Proxmox > 70 °C · thin pool > 80% · `/data` > 85% · disco > 55 °C · qualquer `up == 0` por > 10 min · AdGuard Home parado · boot inesperado do Proxmox.
