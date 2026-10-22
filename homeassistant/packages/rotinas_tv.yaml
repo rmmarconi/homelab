@@ -1,0 +1,74 @@
+# Rotinas das TVs.
+#
+# TV da Sala: se for ligada entre 12h e 18h, desliga sozinha 30 min depois.
+# Aviso na própria TV 5 min antes. Liga/desliga a regra em input_boolean.tv_sala_limite_tarde.
+
+input_boolean:
+  tv_sala_limite_tarde:
+    name: TV da Sala - desligar após 30 min (12h–18h)
+    icon: mdi:television-off
+
+automation:
+  - id: tv_sala_limite_tarde_aviso
+    alias: TV da Sala - aviso 5 min antes de desligar (12h–18h)
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: media_player.sala_de_tv
+        to: "on"
+        for: "00:25:00"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.tv_sala_limite_tarde
+        state: "on"
+      - condition: template
+        value_template: >-
+          {% set ligou = as_local(states.media_player.sala_de_tv.last_changed) %}
+          {{ 12 <= ligou.hour < 18 }}
+    actions:
+      - action: androidtv.adb_command
+        target:
+          entity_id: media_player.tv_sala
+        data:
+          command: >-
+            cmd notification post -S bigtext -t "TV vai desligar" tv_limite
+            "A TV da Sala desliga em 5 minutos (limite das 12h às 18h)."
+        continue_on_error: true
+
+  - id: tv_sala_limite_tarde
+    alias: TV da Sala - desligar após 30 min (12h–18h)
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: media_player.sala_de_tv
+        to: "on"
+        for: "00:30:00"
+    conditions:
+      - condition: state
+        entity_id: input_boolean.tv_sala_limite_tarde
+        state: "on"
+      # a TV precisa ter sido LIGADA entre 12:00 e 17:59 (o desligamento pode cair até 18:29)
+      - condition: template
+        value_template: >-
+          {% set ligou = as_local(states.media_player.sala_de_tv.last_changed) %}
+          {{ 12 <= ligou.hour < 18 }}
+    actions:
+      - action: media_player.turn_off
+        target:
+          entity_id: media_player.sala_de_tv
+      - delay: "00:00:20"
+      # se o controle não desligou (TV sem resposta), tenta pelo ADB
+      - if:
+          - condition: state
+            entity_id: media_player.sala_de_tv
+            state: "on"
+        then:
+          - action: media_player.turn_off
+            target:
+              entity_id: media_player.tv_sala
+            continue_on_error: true
+      - action: logbook.log
+        data:
+          name: TV da Sala
+          message: desligada automaticamente após 30 min ligada (regra das 12h às 18h)
+          entity_id: media_player.sala_de_tv
