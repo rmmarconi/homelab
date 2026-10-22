@@ -1,0 +1,184 @@
+# TV da Sala — TCL Smart TV Pro (G09_4K_GB, Google TV, 10.1.0.150) via ADB (integração androidtv).
+# Mesma lógica do tv_sala.yaml; o controle remoto continua em media_player.sala_de_tv (Android TV Remote).
+#
+# A cada minuto, com a TV ligada, pergunta ao Fire TV qual app está na frente e o que
+# está tocando (MediaSession), guarda em input_text e manda uma linha para o Loki
+# (job="tv") — é de lá que o Grafana tira histórico, horário e tempo por app.
+# Título só aparece quando o app publica MediaSession (Netflix, YouTube, Prime,
+# Disney+, Globoplay, Jellyfin, Spotify costumam publicar).
+
+input_text:
+  tv_sala_app:
+    name: TV Sala - app
+    max: 100
+  tv_sala_titulo:
+    name: TV Sala - título
+    max: 255
+
+rest_command:
+  tv_sala_loki:
+    url: http://10.1.1.15:3100/loki/api/v1/push
+    method: POST
+    content_type: application/json
+    payload: >-
+      {"streams":[{"stream":{"job":"tv","tv":"sala","app":{{ app | tojson }},"estado":{{ estado | tojson }}},
+      "values":[["{{ (now().timestamp() * 1000000000) | int }}",{{ {"app": app, "titulo": titulo, "estado": estado, "app_id": app_id} | tojson | tojson }}]]}]}
+
+template:
+  - sensor:
+      - name: TV Sala app
+        unique_id: tv_sala_app
+        icon: mdi:television-play
+        state: >-
+          {% set s = states('media_player.tv_sala') %}
+          {% if s in ['off', 'standby', 'unavailable', 'unknown'] %}Desligada
+          {% else %}{{ states('input_text.tv_sala_app') or 'Início' }}{% endif %}
+      - name: TV Sala assistindo
+        unique_id: tv_sala_assistindo
+        icon: mdi:movie-open-play
+        state: >-
+          {% set t = states('input_text.tv_sala_titulo') %}
+          {% if states('media_player.tv_sala') in ['off', 'standby', 'unavailable'] or t in ['', 'unknown'] %}—
+          {% else %}{{ t }}{% endif %}
+    binary_sensor:
+      - name: TV Sala ligada
+        unique_id: tv_sala_ligada
+        device_class: running
+        state: "{{ states('media_player.tv_sala') not in ['off', 'standby', 'unavailable', 'unknown'] }}"
+      - name: TV Sala reproduzindo
+        unique_id: tv_sala_reproduzindo
+        device_class: running
+        state: "{{ is_state('media_player.tv_sala', 'playing') }}"
+
+sensor:
+  - platform: history_stats
+    name: TV Sala ligada hoje
+    unique_id: tv_sala_ligada_hoje
+    entity_id: binary_sensor.tv_sala_ligada
+    state: "on"
+    type: time
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: TV Sala reproduzindo hoje
+    unique_id: tv_sala_reproduzindo_hoje
+    entity_id: binary_sensor.tv_sala_reproduzindo
+    state: "on"
+    type: time
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: TV Sala ligada na semana
+    unique_id: tv_sala_ligada_semana
+    entity_id: binary_sensor.tv_sala_ligada
+    state: "on"
+    type: time
+    start: "{{ today_at() - timedelta(days=now().weekday()) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: TV Sala ligada no mês
+    unique_id: tv_sala_ligada_mes
+    entity_id: binary_sensor.tv_sala_ligada
+    state: "on"
+    type: time
+    start: "{{ today_at().replace(day=1) }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: TV Sala ligações hoje
+    unique_id: tv_sala_ligacoes_hoje
+    entity_id: binary_sensor.tv_sala_ligada
+    state: "on"
+    type: count
+    start: "{{ today_at() }}"
+    end: "{{ now() }}"
+
+automation:
+  - id: tv_sala_coleta
+    alias: TV Sala - coleta de app e título
+    mode: single
+    max_exceeded: silent
+    triggers:
+      - trigger: time_pattern
+        minutes: "/1"
+      - trigger: state
+        entity_id: media_player.tv_sala
+    conditions:
+      - condition: template
+        value_template: "{{ states('media_player.tv_sala') not in ['off', 'standby', 'unavailable', 'unknown'] }}"
+    actions:
+      - action: androidtv.adb_command
+        target:
+          entity_id: media_player.tv_sala
+        data:
+          command: >-
+            echo "TOP=$(dumpsys activity activities | grep -m1 -E 'mResumedActivity|topResumedActivity' | grep -oE 'u0 [^/ ]+' | cut -d' ' -f2)";
+            dumpsys media_session | grep -E 'package=|state=PlaybackState|description=' | head -24
+      - variables:
+          resp: "{{ state_attr('media_player.tv_sala', 'adb_response') or '' }}"
+          app_id: >-
+            {% set m = resp | regex_findall('TOP=([A-Za-z0-9._]+)') %}
+            {{ m[0] if m else (state_attr('media_player.tv_sala', 'app_id') or '') }}
+          nomes:
+            com.netflix.ninja: Netflix
+            com.amazon.firebat: Prime Video
+            com.amazon.avod: Prime Video
+            com.amazon.firetv.youtube: YouTube
+            com.google.android.youtube.tv: YouTube
+            com.amazon.firetv.youtube.tv: YouTube TV
+            com.disney.disneyplus: Disney+
+            com.globo.globotv: Globoplay
+            com.wbd.stream: Max
+            com.hbo.hbonow: Max
+            com.apple.atve.amazon.appletv: Apple TV
+            com.spotify.tv.android: Spotify
+            org.jellyfin.androidtv: Jellyfin
+            com.plexapp.android: Plex
+            org.xbmc.kodi: Kodi
+            com.stremio.one: Stremio
+            tv.pluto.android: Pluto TV
+            com.cbs.ott: Paramount+
+            com.crunchyroll.crunchyroid: Crunchyroll
+            tv.twitch.android.app: Twitch
+            com.amazon.amazonvideo.livingroom: Prime Video
+            com.google.android.youtube.tvkids: YouTube Kids
+            com.google.android.youtube.tvmusic: YouTube Music
+            com.globo.globotv.androidtv: Globoplay
+            com.google.android.tvlauncher: Início
+            com.google.android.apps.tv.launcherx: Início
+            com.google.android.tvrecommendations: Início
+            com.android.tv.settings: Configurações
+            com.tcl.tvweishi: Início
+            com.google.android.apps.youtube.unplugged: YouTube TV
+            com.mubi: MUBI
+            com.vix: ViX
+            com.spocky.projengmenu: Início
+            com.amazon.tv.launcher: Início
+            com.amazon.tv.settings.v2: Configurações
+          app: "{{ nomes.get(app_id, app_id if app_id else 'Início') }}"
+          titulo: >-
+            {% set ns = namespace(pkg='', t='') %}
+            {% for l in resp.split('\n') %}
+              {% if 'package=' in l %}{% set ns.pkg = l.split('package=')[1].strip() %}{% endif %}
+              {% if 'description=' in l and ns.pkg == app_id and not ns.t %}
+                {% set d = l.split('description=')[1] | regex_replace('(, null)+$', '') | trim %}
+                {% if d and d != 'null' %}{% set ns.t = d %}{% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.t }}
+          estado: "{{ states('media_player.tv_sala') }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.tv_sala_app
+        data:
+          value: "{{ app[:100] }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.tv_sala_titulo
+        data:
+          value: "{{ titulo[:255] }}"
+      - action: rest_command.tv_sala_loki
+        data:
+          app: "{{ app }}"
+          app_id: "{{ app_id }}"
+          titulo: "{{ titulo }}"
+          estado: "{{ estado }}"

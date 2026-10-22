@@ -138,6 +138,18 @@ automation:
             com.cbs.ott: Paramount+
             com.crunchyroll.crunchyroid: Crunchyroll
             tv.twitch.android.app: Twitch
+            com.amazon.amazonvideo.livingroom: Prime Video
+            com.google.android.youtube.tvkids: YouTube Kids
+            com.google.android.youtube.tvmusic: YouTube Music
+            com.globo.globotv.androidtv: Globoplay
+            com.google.android.tvlauncher: Início
+            com.google.android.apps.tv.launcherx: Início
+            com.google.android.tvrecommendations: Início
+            com.android.tv.settings: Configurações
+            com.tcl.tvweishi: Início
+            com.google.android.apps.youtube.unplugged: YouTube TV
+            com.mubi: MUBI
+            com.vix: ViX
             com.spocky.projengmenu: Início
             com.amazon.tv.launcher: Início
             com.amazon.tv.settings.v2: Configurações

@@ -1,10 +1,36 @@
 {
- "uid": "tv-suite",
- "title": "TV da Suíte",
+ "uid": "tvs",
+ "title": "TVs",
  "tags": [
   "homeassistant",
   "tv"
  ],
+ "templating": {
+  "list": [
+   {
+    "name": "tv",
+    "label": "TV",
+    "type": "custom",
+    "query": "Suíte : suite,Sala : sala",
+    "current": {
+     "text": "Suíte",
+     "value": "suite"
+    },
+    "options": [
+     {
+      "text": "Suíte",
+      "value": "suite",
+      "selected": true
+     },
+     {
+      "text": "Sala",
+      "value": "sala",
+      "selected": false
+     }
+    ]
+   }
+  ]
+ },
  "timezone": "browser",
  "refresh": "1m",
  "time": {
@@ -13,7 +39,7 @@
  },
  "schemaVersion": 39,
  "graphTooltip": 1,
- "description": "Fire TV Stick 4K da Suíte (10.1.0.41): apps, títulos, horários e tempo de uso.",
+ "description": "TVs da casa (Suíte: Fire TV 10.1.0.41; Sala: TCL Google TV 10.1.0.150): apps, títulos, horários e tempo de uso.",
  "panels": [
   {
    "type": "row",
@@ -46,7 +72,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(hass_binary_sensor_state{entity=\"binary_sensor.tv_suite_ligada\"})",
+     "expr": "max(hass_binary_sensor_state{entity=\"binary_sensor.tv_${tv}_ligada\"})",
      "refId": "A",
      "instant": true
     }
@@ -120,7 +146,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(hass_binary_sensor_state{entity=\"binary_sensor.tv_suite_reproduzindo\"})",
+     "expr": "max(hass_binary_sensor_state{entity=\"binary_sensor.tv_${tv}_reproduzindo\"})",
      "refId": "A",
      "instant": true
     }
@@ -196,7 +222,7 @@
       "uid": "loki"
      },
      "refId": "A",
-     "expr": "{job=\"tv\", tv=\"suite\"} | json",
+     "expr": "{job=\"tv\", tv=\"$tv\"} | json",
      "queryType": "range",
      "maxLines": 1
     }
@@ -275,7 +301,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_hoje\"})",
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_${tv}_ligada_hoje\"})",
      "refId": "A",
      "instant": true
     }
@@ -323,7 +349,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_reproduzindo_hoje\"})",
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_${tv}_reproduzindo_hoje\"})",
      "refId": "A",
      "instant": true
     }
@@ -372,7 +398,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_na_semana\"})",
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_${tv}_ligada_na_semana\"})",
      "refId": "A",
      "instant": true
     }
@@ -420,7 +446,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_no_mes\"})",
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_${tv}_ligada_no_mes\"})",
      "refId": "A",
      "instant": true
     }
@@ -484,7 +510,7 @@
      "refId": "A",
      "queryType": "range",
      "legendFormat": "{{app}}",
-     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"suite\", app!~\"Início|Configurações|Desligada\"} [1d]))"
+     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"$tv\", app!~\"Início|Configurações|Desligada\"} [1d]))"
     }
    ],
    "fieldConfig": {
@@ -541,7 +567,7 @@
      "refId": "A",
      "queryType": "range",
      "legendFormat": "{{app}}",
-     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"suite\"} [1h]))"
+     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"$tv\"} [1h]))"
     }
    ],
    "fieldConfig": {
@@ -595,7 +621,7 @@
      "refId": "A",
      "queryType": "instant",
      "legendFormat": "{{app}}",
-     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"suite\", app!~\"Início|Configurações|Desligada\"} [$__range]))"
+     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"$tv\", app!~\"Início|Configurações|Desligada\"} [$__range]))"
     }
    ],
    "fieldConfig": {
@@ -646,7 +672,7 @@
      },
      "refId": "A",
      "legendFormat": "ligada",
-     "expr": "max_over_time(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_hoje\"}[1h])"
+     "expr": "max_over_time(hass_sensor_duration_h{entity=\"sensor.tv_${tv}_ligada_hoje\"}[1h])"
     },
     {
      "datasource": {
@@ -655,7 +681,7 @@
      },
      "refId": "B",
      "legendFormat": "assistindo",
-     "expr": "max_over_time(hass_sensor_duration_h{entity=\"sensor.tv_suite_reproduzindo_hoje\"}[1h])"
+     "expr": "max_over_time(hass_sensor_duration_h{entity=\"sensor.tv_${tv}_reproduzindo_hoje\"}[1h])"
     }
    ],
    "fieldConfig": {
@@ -681,6 +707,89 @@
    "description": "Acumulado do dia (zera à meia-noite)."
   },
   {
+   "type": "timeseries",
+   "title": "Comparativo: minutos por TV, por dia",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "interval": "1d",
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 24
+   },
+   "description": "Todas as TVs, independentemente do seletor. Minutos em algum app (fora do launcher).",
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{tv}}",
+     "expr": "sum by (tv) (count_over_time({job=\"tv\", app!~\"Início|Configurações|Desligada\"} [1d]))"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "m",
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 80,
+      "lineWidth": 1,
+      "stacking": {
+       "mode": "none"
+      }
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "suite"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Suíte"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "sala"
+      },
+      "properties": [
+       {
+        "id": "displayName",
+        "value": "Sala"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "sum",
+      "mean"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   }
+  },
+  {
    "type": "row",
    "title": "O que foi assistido",
    "collapsed": false,
@@ -689,7 +798,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 24
+    "y": 32
    }
   },
   {
@@ -703,7 +812,7 @@
     "h": 11,
     "w": 10,
     "x": 0,
-    "y": 25
+    "y": 33
    },
    "description": "Só aparecem títulos de apps que publicam o que está tocando (MediaSession).",
    "targets": [
@@ -715,7 +824,7 @@
      "refId": "A",
      "queryType": "instant",
      "format": "table",
-     "expr": "sum by (app, titulo) (count_over_time({job=\"tv\", tv=\"suite\"} | json | titulo != \"\" [$__range]))"
+     "expr": "sum by (app, titulo) (count_over_time({job=\"tv\", tv=\"$tv\"} | json | titulo != \"\" [$__range]))"
     }
    ],
    "transformations": [
@@ -785,7 +894,7 @@
     "h": 11,
     "w": 14,
     "x": 10,
-    "y": 25
+    "y": 33
    },
    "targets": [
     {
@@ -795,7 +904,7 @@
      },
      "refId": "A",
      "queryType": "range",
-     "expr": "{job=\"tv\", tv=\"suite\"} | json | line_format \"{{.app}}  ·  {{ if .titulo }}{{.titulo}}{{ else }}—{{ end }}  ·  {{.estado}}\""
+     "expr": "{job=\"tv\", tv=\"$tv\"} | json | line_format \"{{.app}}  ·  {{ if .titulo }}{{.titulo}}{{ else }}—{{ end }}  ·  {{.estado}}\""
     }
    ],
    "options": {

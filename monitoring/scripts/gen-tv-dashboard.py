@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Gera o dashboard "TV da Suíte" (uid tv-suite) — Fire TV Stick 4K via Home Assistant.
+"""Gera o dashboard "TVs" (uid tvs) — TVs da casa via ADB no Home Assistant.
+
+TVs: suite = Fire TV Stick 4K (10.1.0.41); sala = TCL Smart TV Pro, Google TV (10.1.0.150).
+Variável $tv escolhe a TV; o painel "Comparativo" mostra as duas.
 
 Fontes:
   Loki {job="tv"}: uma linha por minuto com a TV ligada (labels app/estado, JSON com titulo/app_id),
@@ -15,8 +18,9 @@ import os
 P = {"type": "prometheus", "uid": "prometheus"}
 L = {"type": "loki", "uid": "loki"}
 OUT = "grafana/dashboards/homeassistant"
-TV = '{job="tv", tv="suite"}'
-APPS = '{job="tv", tv="suite", app!~"Início|Configurações|Desligada"}'
+TV = '{job="tv", tv="$tv"}'
+APPS = '{job="tv", tv="$tv", app!~"Início|Configurações|Desligada"}'
+TODAS = '{job="tv", app!~"Início|Configurações|Desligada"}'
 AZUL, VERDE, ROXO, AMARELO, CINZA = "#5794F2", "green", "#B877D9", "#EAB839", "text"
 
 
@@ -64,8 +68,8 @@ def main():
     b = Board()
     b.row("Agora")
     b.add(
-        stat("TV", 'max(hass_binary_sensor_state{entity="binary_sensor.tv_suite_ligada"})', 0, 3, maps=onoff("LIGADA", "desligada")),
-        stat("Reproduzindo", 'max(hass_binary_sensor_state{entity="binary_sensor.tv_suite_reproduzindo"})', 3, 3,
+        stat("TV", 'max(hass_binary_sensor_state{entity="binary_sensor.tv_${tv}_ligada"})', 0, 3, maps=onoff("LIGADA", "desligada")),
+        stat("Reproduzindo", 'max(hass_binary_sensor_state{entity="binary_sensor.tv_${tv}_reproduzindo"})', 3, 3,
              maps=onoff("SIM", "não")),
         {"type": "table", "title": "No momento", "datasource": L, "gridPos": {"h": 4, "w": 10, "x": 6, "y": 0},
          "description": "Última leitura do Fire TV (a cada minuto, com a TV ligada).",
@@ -79,11 +83,11 @@ def main():
                              {"id": "limit", "options": {"limitField": 1}}],
          "fieldConfig": {"defaults": {"noValue": "TV desligada"}, "overrides": []},
          "options": {"showHeader": True, "cellHeight": "md"}},
-        stat("Ligada hoje", 'max(hass_sensor_duration_h{entity="sensor.tv_suite_ligada_hoje"})', 16, 2, unit="h", decimals=1),
-        stat("Assistindo hoje", 'max(hass_sensor_duration_h{entity="sensor.tv_suite_reproduzindo_hoje"})', 18, 2, unit="h",
+        stat("Ligada hoje", 'max(hass_sensor_duration_h{entity="sensor.tv_${tv}_ligada_hoje"})', 16, 2, unit="h", decimals=1),
+        stat("Assistindo hoje", 'max(hass_sensor_duration_h{entity="sensor.tv_${tv}_reproduzindo_hoje"})', 18, 2, unit="h",
              decimals=1, color=ROXO, desc="Tempo com algo tocando (estado playing)."),
-        stat("Na semana", 'max(hass_sensor_duration_h{entity="sensor.tv_suite_ligada_na_semana"})', 20, 2, unit="h", decimals=1),
-        stat("No mês", 'max(hass_sensor_duration_h{entity="sensor.tv_suite_ligada_no_mes"})', 22, 2, unit="h", decimals=1),
+        stat("Na semana", 'max(hass_sensor_duration_h{entity="sensor.tv_${tv}_ligada_na_semana"})', 20, 2, unit="h", decimals=1),
+        stat("No mês", 'max(hass_sensor_duration_h{entity="sensor.tv_${tv}_ligada_no_mes"})', 22, 2, unit="h", decimals=1),
     )
 
     b.row("Tempo de uso")
@@ -113,12 +117,24 @@ def main():
         {"type": "timeseries", "title": "Horas por dia (ligada x assistindo)", "datasource": P, "interval": "1h",
          "gridPos": {"h": 9, "w": 16, "x": 8, "y": 0},
          "targets": [{"datasource": P, "refId": "A", "legendFormat": "ligada",
-                      "expr": 'max_over_time(hass_sensor_duration_h{entity="sensor.tv_suite_ligada_hoje"}[1h])'},
+                      "expr": 'max_over_time(hass_sensor_duration_h{entity="sensor.tv_${tv}_ligada_hoje"}[1h])'},
                      {"datasource": P, "refId": "B", "legendFormat": "assistindo",
-                      "expr": 'max_over_time(hass_sensor_duration_h{entity="sensor.tv_suite_reproduzindo_hoje"}[1h])'}],
+                      "expr": 'max_over_time(hass_sensor_duration_h{entity="sensor.tv_${tv}_reproduzindo_hoje"}[1h])'}],
          "fieldConfig": {"defaults": {"unit": "h", "decimals": 1, "custom": {"fillOpacity": 15, "lineWidth": 2}}, "overrides": []},
          "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
          "description": "Acumulado do dia (zera à meia-noite)."},
+    )
+
+    b.add(
+        {"type": "timeseries", "title": "Comparativo: minutos por TV, por dia", "datasource": L, "interval": "1d",
+         "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+         "description": "Todas as TVs, independentemente do seletor. Minutos em algum app (fora do launcher).",
+         "targets": [{"datasource": L, "refId": "A", "queryType": "range", "legendFormat": "{{tv}}",
+                      "expr": f'sum by (tv) (count_over_time({TODAS} [1d]))'}],
+         "fieldConfig": {"defaults": {"unit": "m", "custom": {**bars, "stacking": {"mode": "none"}}, "color": {"mode": "palette-classic"}},
+                         "overrides": [{"matcher": {"id": "byName", "options": "suite"}, "properties": [{"id": "displayName", "value": "Suíte"}]},
+                                       {"matcher": {"id": "byName", "options": "sala"}, "properties": [{"id": "displayName", "value": "Sala"}]}]},
+         "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["sum", "mean"]}, "tooltip": {"mode": "multi"}}},
     )
 
     b.row("O que foi assistido")
@@ -140,13 +156,16 @@ def main():
                      "enableLogDetails": True}},
     )
 
-    d = {"uid": "tv-suite", "title": "TV da Suíte", "tags": ["homeassistant", "tv"], "timezone": "browser",
+    var = {"name": "tv", "label": "TV", "type": "custom", "query": "Suíte : suite,Sala : sala",
+           "current": {"text": "Suíte", "value": "suite"},
+           "options": [{"text": "Suíte", "value": "suite", "selected": True}, {"text": "Sala", "value": "sala", "selected": False}]}
+    d = {"uid": "tvs", "title": "TVs", "tags": ["homeassistant", "tv"], "templating": {"list": [var]}, "timezone": "browser",
          "refresh": "1m", "time": {"from": "now-7d", "to": "now"}, "schemaVersion": 39, "graphTooltip": 1,
-         "description": "Fire TV Stick 4K da Suíte (10.1.0.41): apps, títulos, horários e tempo de uso.",
+         "description": "TVs da casa (Suíte: Fire TV 10.1.0.41; Sala: TCL Google TV 10.1.0.150): apps, títulos, horários e tempo de uso.",
          "panels": b.panels}
     os.makedirs(OUT, exist_ok=True)
-    json.dump(d, open(f"{OUT}/tv-suite.json", "w"), indent=1, ensure_ascii=False)
-    print(f"{OUT}/tv-suite.json: {sum(p['type'] != 'row' for p in b.panels)} painéis")
+    json.dump(d, open(f"{OUT}/tvs.json", "w"), indent=1, ensure_ascii=False)
+    print(f"{OUT}/tvs.json: {sum(p['type'] != 'row' for p in b.panels)} painéis")
 
 
 if __name__ == "__main__":
