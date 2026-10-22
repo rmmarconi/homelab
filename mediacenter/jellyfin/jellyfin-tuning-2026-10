@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""Ajustes do Jellyfin (2026-10-22). Só aplica com zero reproduções; depois desativa o próprio timer.
+- VAAPI: decodificar HEVC/HEVC 10 bit/VP9/VP9 10 bit/MPEG-2/VC-1 na GPU (Vega 8 suporta; antes só H.264)
+- AV1 desligado na codificação (a Vega não codifica AV1)
+- Throttling e remoção de segmentos de transcodificação (menos CPU/GPU e disco)
+- Proxy conhecido 127.0.0.1 (nginx local) e sub-redes da LAN: IP real dos clientes remotos
+- Métricas Prometheus nativas (/metrics, só LAN) e trickplay só com keyframes (muito mais rápido)
+"""
+import json, re, shutil, subprocess, sys, time, urllib.parse, urllib.request
+Q = "http://10.1.1.15:9090/api/v1/query?" + urllib.parse.urlencode({"query": "sum(jellyfin_streams) or vector(0)"})
+try:
+    ativos = float(json.load(urllib.request.urlopen(Q, timeout=10))["data"]["result"][0]["value"][1])
+except Exception as e:
+    print("sem leitura do Prometheus, adiando:", e); sys.exit(0)
+if ativos > 0:
+    print(f"{ativos:.0f} reprodução(ões) ativa(s), adiando"); sys.exit(0)
+
+def edita(path, subs):
+    s = open(path, encoding="utf-8-sig").read()
+    shutil.copy2(path, path + ".bak-2026-10-22")
+    for pat, rep in subs:
+        s, n = re.subn(pat, rep, s, flags=re.S)
+        if n == 0: print("AVISO: não casou em", path, ":", pat[:60])
+    open(path, "w", encoding="utf-8").write(s)
+
+subprocess.run(["systemctl", "stop", "jellyfin"], check=True)
+time.sleep(3)
+edita("/etc/jellyfin/encoding.xml", [
+    (r"<HardwareDecodingCodecs>.*?</HardwareDecodingCodecs>",
+     "<HardwareDecodingCodecs>\n    <string>h264</string>\n    <string>hevc</string>\n    <string>mpeg2video</string>\n    <string>vc1</string>\n    <string>vp9</string>\n  </HardwareDecodingCodecs>"),
+    (r"<EnableDecodingColorDepth10Hevc>false</", "<EnableDecodingColorDepth10Hevc>true</"),
+    (r"<EnableDecodingColorDepth10Vp9>false</", "<EnableDecodingColorDepth10Vp9>true</"),
+    (r"<AllowAv1Encoding>true</", "<AllowAv1Encoding>false</"),
+    (r"<EnableThrottling>false</", "<EnableThrottling>true</"),
+    (r"<EnableSegmentDeletion>false</", "<EnableSegmentDeletion>true</"),
+])
+edita("/etc/jellyfin/network.xml", [
+    (r"<LocalNetworkSubnets\s*/>", "<LocalNetworkSubnets>\n    <string>10.1.0.0/24</string>\n    <string>10.1.1.0/24</string>\n    <string>10.1.2.0/24</string>\n  </LocalNetworkSubnets>"),
+    (r"<KnownProxies\s*/>", "<KnownProxies>\n    <string>127.0.0.1</string>\n  </KnownProxies>"),
+])
+edita("/etc/jellyfin/system.xml", [
+    (r"<EnableMetrics>false</", "<EnableMetrics>true</"),
+    (r"<EnableKeyFrameOnlyExtraction>false</", "<EnableKeyFrameOnlyExtraction>true</"),
+])
+subprocess.run(["systemctl", "start", "jellyfin"], check=True)
+subprocess.run(["systemctl", "disable", "--now", "jellyfin-tuning.timer"], check=False)
+print("ajustes aplicados")

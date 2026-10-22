@@ -95,6 +95,13 @@ scrape_configs:
         labels: {instance: mediacenter}
 
   # Disponibilidade das interfaces web (sonda HTTP a partir da VM monitor)
+  # Métricas nativas do Jellyfin (.NET/servidor). Só respondem para a LAN (LocalNetworkSubnets).
+  - job_name: jellyfin-native
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["10.1.1.100:8096"]
+        labels: {instance: mediacenter}
+
   - job_name: blackbox
     metrics_path: /probe
     params:

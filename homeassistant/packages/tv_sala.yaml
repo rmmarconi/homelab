@@ -11,6 +11,9 @@ input_text:
   tv_sala_app:
     name: TV Sala - app
     max: 100
+  tv_sala_estado:
+    name: TV Sala - estado
+    max: 20
   tv_sala_titulo:
     name: TV Sala - título
     max: 255
@@ -48,7 +51,7 @@ template:
       - name: TV Sala reproduzindo
         unique_id: tv_sala_reproduzindo
         device_class: running
-        state: "{{ is_state('media_player.tv_sala', 'playing') }}"
+        state: "{{ is_state('input_text.tv_sala_estado', 'playing') }}"
 
 sensor:
   - platform: history_stats
@@ -155,7 +158,7 @@ automation:
             com.amazon.tv.launcher: Início
             com.amazon.tv.settings.v2: Configurações
           app: "{{ nomes.get(app_id, app_id if app_id else 'Início') }}"
-          titulo: >-
+          titulo_ms: >-
             {% set ns = namespace(pkg='', t='') %}
             {% for l in resp.split('\n') %}
               {% if 'package=' in l %}{% set ns.pkg = l.split('package=')[1].strip() %}{% endif %}
@@ -165,12 +168,30 @@ automation:
               {% endif %}
             {% endfor %}
             {{ ns.t }}
-          estado: "{{ states('media_player.tv_sala') }}"
+          jf: >-
+            {% set ns = namespace(e='') %}
+            {% for e in integration_entities('jellyfin') | select('match', 'media_player') | list %}
+              {% if not ns.e and states(e) in ['playing', 'paused'] and (state_attr(e, 'friendly_name') or '') is search('TCL|Smart TV|Google TV|Android TV|BRAVIA|Sala', ignorecase=True) %}{% set ns.e = e %}{% endif %}
+            {% endfor %}
+            {{ ns.e }}
+          titulo: >-
+            {% if app == 'Jellyfin' and jf and not titulo_ms %}
+              {% set serie = state_attr(jf, 'media_series_title') %}
+              {% set ep = state_attr(jf, 'media_title') or '' %}
+              {{ (serie ~ ' — ' ~ ep) if serie else ep }}
+            {% else %}{{ titulo_ms }}{% endif %}
+          estado: >-
+            {% if app == 'Jellyfin' and jf %}{{ states(jf) }}{% else %}{{ states('media_player.tv_sala') }}{% endif %}
       - action: input_text.set_value
         target:
           entity_id: input_text.tv_sala_app
         data:
           value: "{{ app[:100] }}"
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.tv_sala_estado
+        data:
+          value: "{{ estado }}"
       - action: input_text.set_value
         target:
           entity_id: input_text.tv_sala_titulo

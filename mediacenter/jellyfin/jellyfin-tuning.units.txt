@@ -1,0 +1,13 @@
+[Unit]
+Description=Aplica ajustes do Jellyfin quando ninguém estiver assistindo (uma vez)
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/jellyfin-tuning-2026-10
+
+[Unit]
+Description=Tenta aplicar os ajustes do Jellyfin a cada 5 min
+[Timer]
+OnActiveSec=1min
+OnUnitActiveSec=5min
+[Install]
+WantedBy=timers.target
