@@ -26,3 +26,16 @@ Substituiu os Pi-holes em 2026-10-20. Mesma rede: IPs, IPv6, MACs, gateway e VLA
   (`instance=adguard-1/2`). Dashboard "AdGuard Home" na pasta AdGuard do Grafana.
 
 Rollback: `pct stop 107 108; pct start 100 101 106; pct set 100 --onboot 1` (idem 101 e 106).
+
+## DNS interno (rewrites) — 2026-10-22
+
+Para os serviços do mediacenter não fazerem o caminho LAN → IP público → NAT loopback no gateway
+(que alternava entre as duas WANs e causava pausas no Jellyfin do Fire TV), o AdGuard responde dentro
+de casa com o IP interno. Mesmo certificado, nada muda nos apps:
+
+| Domínio | Resposta |
+|---|---|
+| `media.rafaelmarconi.com.br`, `*.media.rafaelmarconi.com.br` | 10.1.1.100 |
+| `marconi3dlab.com.br`, `www.marconi3dlab.com.br` | 10.1.1.100 |
+
+`short.x7velo.com` continua pela Cloudflare (proxy), de propósito.
