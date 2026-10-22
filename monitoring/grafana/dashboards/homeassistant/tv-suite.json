@@ -1,0 +1,810 @@
+{
+ "uid": "tv-suite",
+ "title": "TV da Suíte",
+ "tags": [
+  "homeassistant",
+  "tv"
+ ],
+ "timezone": "browser",
+ "refresh": "1m",
+ "time": {
+  "from": "now-7d",
+  "to": "now"
+ },
+ "schemaVersion": 39,
+ "graphTooltip": 1,
+ "description": "Fire TV Stick 4K da Suíte (10.1.0.41): apps, títulos, horários e tempo de uso.",
+ "panels": [
+  {
+   "type": "row",
+   "title": "Agora",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "type": "stat",
+   "title": "TV",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 0,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(hass_binary_sensor_state{entity=\"binary_sensor.tv_suite_ligada\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "desligada",
+         "color": "text"
+        },
+        "1": {
+         "text": "LIGADA",
+         "color": "green"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Reproduzindo",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 3,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(hass_binary_sensor_state{entity=\"binary_sensor.tv_suite_reproduzindo\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "noValue": "0",
+     "color": {
+      "mode": "thresholds"
+     },
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "não",
+         "color": "text"
+        },
+        "1": {
+         "text": "SIM",
+         "color": "green"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "text",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   }
+  },
+  {
+   "type": "table",
+   "title": "No momento",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 10,
+    "x": 6,
+    "y": 1
+   },
+   "description": "Última leitura do Fire TV (a cada minuto, com a TV ligada).",
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "expr": "{job=\"tv\", tv=\"suite\"} | json",
+     "queryType": "range",
+     "maxLines": 1
+    }
+   ],
+   "transformations": [
+    {
+     "id": "extractFields",
+     "options": {
+      "source": "labels"
+     }
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "labels": true,
+       "id": true,
+       "tsNs": true,
+       "Line": true,
+       "job": true,
+       "tv": true,
+       "detected_level": true,
+       "service_name": true,
+       "app_id": true,
+       "estado_extracted": true,
+       "app_extracted": true
+      },
+      "indexByName": {
+       "Time": 0,
+       "app": 1,
+       "titulo": 2,
+       "estado": 3
+      },
+      "renameByName": {
+       "Time": "Horário",
+       "app": "App",
+       "titulo": "Título",
+       "estado": "Estado"
+      }
+     }
+    },
+    {
+     "id": "limit",
+     "options": {
+      "limitField": 1
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "TV desligada"
+    },
+    "overrides": []
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "md"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Ligada hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 2,
+    "x": 16,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_hoje\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#5794F2"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Assistindo hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 2,
+    "x": 18,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_reproduzindo_hoje\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#B877D9"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Tempo com algo tocando (estado playing)."
+  },
+  {
+   "type": "stat",
+   "title": "Na semana",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 2,
+    "x": 20,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_na_semana\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#5794F2"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   }
+  },
+  {
+   "type": "stat",
+   "title": "No mês",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "gridPos": {
+    "h": 4,
+    "w": 2,
+    "x": 22,
+    "y": 1
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_no_mes\"})",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#5794F2"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   }
+  },
+  {
+   "type": "row",
+   "title": "Tempo de uso",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 5
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Minutos por app, por dia",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "interval": "1d",
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 0,
+    "y": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{app}}",
+     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"suite\", app!~\"Início|Configurações|Desligada\"} [1d]))"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "m",
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 80,
+      "lineWidth": 1,
+      "stacking": {
+       "mode": "normal"
+      }
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "sum"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Uso ao longo do dia (minutos por hora)",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "interval": "1h",
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 12,
+    "y": 6
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "queryType": "range",
+     "legendFormat": "{{app}}",
+     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"suite\"} [1h]))"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "m",
+     "max": 60,
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 80,
+      "lineWidth": 1,
+      "stacking": {
+       "mode": "normal"
+      }
+     },
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   }
+  },
+  {
+   "type": "piechart",
+   "title": "Tempo por app (período)",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 9,
+    "w": 8,
+    "x": 0,
+    "y": 15
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "queryType": "instant",
+     "legendFormat": "{{app}}",
+     "expr": "sum by (app) (count_over_time({job=\"tv\", tv=\"suite\", app!~\"Início|Configurações|Desligada\"} [$__range]))"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "m",
+     "color": {
+      "mode": "palette-classic"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "pieType": "donut",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "value",
+      "percent"
+     ]
+    }
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Horas por dia (ligada x assistindo)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "interval": "1h",
+   "gridPos": {
+    "h": 9,
+    "w": 16,
+    "x": 8,
+    "y": 15
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "refId": "A",
+     "legendFormat": "ligada",
+     "expr": "max_over_time(hass_sensor_duration_h{entity=\"sensor.tv_suite_ligada_hoje\"}[1h])"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "refId": "B",
+     "legendFormat": "assistindo",
+     "expr": "max_over_time(hass_sensor_duration_h{entity=\"sensor.tv_suite_reproduzindo_hoje\"}[1h])"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "h",
+     "decimals": 1,
+     "custom": {
+      "fillOpacity": 15,
+      "lineWidth": 2
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "list",
+     "placement": "bottom"
+    },
+    "tooltip": {
+     "mode": "multi"
+    }
+   },
+   "description": "Acumulado do dia (zera à meia-noite)."
+  },
+  {
+   "type": "row",
+   "title": "O que foi assistido",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 24
+   }
+  },
+  {
+   "type": "table",
+   "title": "Títulos no período (minutos)",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 11,
+    "w": 10,
+    "x": 0,
+    "y": 25
+   },
+   "description": "Só aparecem títulos de apps que publicam o que está tocando (MediaSession).",
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "queryType": "instant",
+     "format": "table",
+     "expr": "sum by (app, titulo) (count_over_time({job=\"tv\", tv=\"suite\"} | json | titulo != \"\" [$__range]))"
+    }
+   ],
+   "transformations": [
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true
+      },
+      "renameByName": {
+       "app": "App",
+       "titulo": "Título",
+       "Value #A": "Minutos"
+      }
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Minutos",
+        "desc": true
+       }
+      ]
+     }
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "—"
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Minutos"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "m"
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm"
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Linha do tempo (minuto a minuto)",
+   "datasource": {
+    "type": "loki",
+    "uid": "loki"
+   },
+   "gridPos": {
+    "h": 11,
+    "w": 14,
+    "x": 10,
+    "y": 25
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "loki",
+      "uid": "loki"
+     },
+     "refId": "A",
+     "queryType": "range",
+     "expr": "{job=\"tv\", tv=\"suite\"} | json | line_format \"{{.app}}  ·  {{ if .titulo }}{{.titulo}}{{ else }}—{{ end }}  ·  {{.estado}}\""
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "wrapLogMessage": true,
+    "sortOrder": "Descending",
+    "dedupStrategy": "consecutive",
+    "enableLogDetails": true
+   }
+  }
+ ]
+}
