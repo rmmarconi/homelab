@@ -1,0 +1,72 @@
+# Rotinas dos ares-condicionados (Gree).
+#
+# Temperatura mínima: se alguém programar abaixo do mínimo (padrão 24 °C) com o
+# aparelho resfriando (cool, auto ou dry), o HA volta para o mínimo. Vale para
+# mudanças pelo controle remoto, app ou HA. No aquecimento (heat) não mexe.
+# Liga/desliga a regra em input_boolean.ar_temperatura_minima; mínimo em
+# input_number.ar_temperatura_minima.
+
+input_boolean:
+  ar_temperatura_minima:
+    name: Ar - impedir temperatura abaixo do mínimo
+    icon: mdi:thermometer-check
+
+input_number:
+  ar_temperatura_minima:
+    name: Ar - temperatura mínima
+    icon: mdi:thermometer-low
+    min: 18
+    max: 28
+    step: 1
+    unit_of_measurement: "°C"
+    mode: box
+
+automation:
+  - id: ar_temperatura_minima
+    alias: Ar - corrigir temperatura abaixo do mínimo
+    mode: single
+    max_exceeded: silent
+    triggers:
+      # mudou a temperatura programada ou o modo de qualquer um dos três
+      - trigger: state
+        entity_id: &ares
+          - climate.c03937630d3f   # Escritório
+          - climate.c0393762fa51   # Clara
+          - climate.c0393762e6bc   # Suite
+        attribute: temperature
+      - trigger: state
+        entity_id: *ares
+      # garantia: o Gree atualiza por polling; revisa a cada 5 min
+      - trigger: time_pattern
+        minutes: "/5"
+      - trigger: homeassistant
+        event: start
+    conditions:
+      - condition: state
+        entity_id: input_boolean.ar_temperatura_minima
+        state: "on"
+    actions:
+      - variables:
+          minimo: "{{ states('input_number.ar_temperatura_minima') | float(24) }}"
+          abaixo: >-
+            {{ expand(['climate.c03937630d3f', 'climate.c0393762fa51', 'climate.c0393762e6bc'])
+               | selectattr('state', 'in', ['cool', 'auto', 'dry'])
+               | selectattr('attributes.temperature', 'defined')
+               | selectattr('attributes.temperature', 'lt', minimo)
+               | map(attribute='entity_id') | list }}
+      - repeat:
+          for_each: "{{ abaixo }}"
+          sequence:
+            - variables:
+                antes: "{{ state_attr(repeat.item, 'temperature') }}"
+                nome: "{{ state_attr(repeat.item, 'friendly_name') }}"
+            - action: climate.set_temperature
+              target:
+                entity_id: "{{ repeat.item }}"
+              data:
+                temperature: "{{ minimo }}"
+            - action: logbook.log
+              data:
+                name: "{{ nome }}"
+                message: "estava em {{ antes | int }} °C; ajustado para {{ minimo | int }} °C (mínimo permitido)"
+                entity_id: "{{ repeat.item }}"
