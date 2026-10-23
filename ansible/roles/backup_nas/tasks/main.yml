@@ -89,3 +89,62 @@
     minute: "*/15"
     job: /usr/local/sbin/backup-metrics
     user: root
+
+- name: Verificação diária de integridade dos backups (zstd -t)
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/backup-verify
+    mode: "0750"
+    content: |
+      #!/bin/sh
+      # Testa os arquivos gravados nas últimas 30 h no UNAS. Em 2026-10-23 o SMB do UNAS
+      # corrompeu 2 backups em silêncio (montagem soft + engasgos); isto pega o próximo caso.
+      set -u
+      M={{ nas_mountpoint }}; OUT={{ node_exporter_textfile_dir }}/backup_verify.prom
+      ok=0; falha=0; L=""
+      for f in $(find "$M/dump" "$M/host-config" "$M/apps" -name '*.zst' -mmin -1800 2>/dev/null); do
+        if zstd -tq "$f" 2>/dev/null; then
+          ok=$((ok+1))
+        else
+          falha=$((falha+1)); L="$L $f"
+          logger -t backup-verify "FALHA de integridade: $f"
+        fi
+      done
+      { echo "# HELP backup_verify_ok Arquivos de backup recentes íntegros"; echo "# TYPE backup_verify_ok gauge"; echo "backup_verify_ok $ok"
+        echo "# HELP backup_verify_failed Arquivos de backup recentes corrompidos"; echo "# TYPE backup_verify_failed gauge"; echo "backup_verify_failed $falha"
+        echo "# HELP backup_verify_last_run_timestamp_seconds Última verificação"; echo "# TYPE backup_verify_last_run_timestamp_seconds gauge"; echo "backup_verify_last_run_timestamp_seconds $(date +%s)"; } > "$OUT.tmp"
+      mv "$OUT.tmp" "$OUT"
+      echo "ok=$ok falha=$falha$L"
+
+- name: Units da verificação
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: "0644"
+  loop:
+    - name: backup-verify.service
+      content: |
+        [Unit]
+        Description=Verifica a integridade dos backups recentes no UNAS
+        RequiresMountsFor={{ nas_mountpoint }}
+        [Service]
+        Type=oneshot
+        Nice=10
+        IOSchedulingClass=idle
+        ExecStart=/usr/local/sbin/backup-verify
+    - name: backup-verify.timer
+      content: |
+        [Unit]
+        Description=Verificação diária dos backups
+        [Timer]
+        OnCalendar=*-*-* 07:00
+        Persistent=true
+        [Install]
+        WantedBy=timers.target
+
+- name: Timer da verificação
+  ansible.builtin.systemd_service:
+    name: backup-verify.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"  # no check a unit ainda não existe
