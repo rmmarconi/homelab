@@ -14,16 +14,19 @@ mysqldump --all-databases --single-transaction --routines --events --default-cha
   | zstd -q -o "$T/mariadb-all.sql.zst"
 
 # SQLite dos apps com cópia consistente (os *arr e o Jellyfin usam SQLite)
-find /var/lib/mediacenter /var/lib/jellyfin/data -maxdepth 4 -name '*.db' -size +0 2>/dev/null | while read -r db; do
-  out="$T/sqlite${db}"; mkdir -p "$(dirname "$out")"
+find /var/lib/mediacenter /var/lib/jellyfin/data /opt/mediacenter/seerr/config -maxdepth 4 \
+  \( -name '*.db' -o -name '*.sqlite3' \) -size +0 2>/dev/null | while read -r db; do
+  # extensão .snapshot para não cair no --exclude='*.db' abaixo; restaurar renomeando
+  out="$T/sqlite${db}.snapshot"; mkdir -p "$(dirname "$out")"
   sqlite3 "$db" ".backup '$out'" 2>/dev/null || cp -p "$db" "$out"
 done
 
 tar --zstd -cf "$DEST/mediacenter-$DIA.tar.zst.tmp" --warning=no-file-changed --ignore-failed-read \
   --exclude='*.db' --exclude='*.db-wal' --exclude='*.db-shm' \
+  --exclude='*.sqlite3' --exclude='*.sqlite3-wal' --exclude='*.sqlite3-shm' \
   --exclude='*/MediaCover/*' --exclude='*/logs/*' --exclude='*/cache/*' --exclude='*/Backups/scheduled/*' \
   /etc/nginx /etc/letsencrypt /etc/php/8.4/fpm/pool.d /etc/shlink /etc/exportarr /etc/systemd/system \
-  /etc/jellyfin /var/lib/jellyfin/plugins /var/lib/mediacenter /etc/seerr /opt/shlink/data \
+  /etc/jellyfin /var/lib/jellyfin/plugins /var/lib/mediacenter /etc/seerr /opt/mediacenter/seerr/config /opt/shlink/data \
   /var/www/marconi3dlab /usr/local/bin /usr/local/sbin /etc/cron.d /etc/ufw \
   -C "$T" .
 mv "$DEST/mediacenter-$DIA.tar.zst.tmp" "$DEST/mediacenter-$DIA.tar.zst"

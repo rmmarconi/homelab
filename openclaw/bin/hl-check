@@ -11,7 +11,11 @@ proxmox() { sec "Proxmox"; rsh $PVE '
   echo "-- CPU"; sensors 2>/dev/null | grep -E "Package|Core" | head -5
   echo "-- SSD"; smartctl -H -A /dev/sda 2>/dev/null | grep -E "result|Reallocated|Pending|Temperature|UDMA_CRC"
   echo "-- memória"; free -m | sed -n 2p
-  echo "-- atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'; }
+  echo "-- atualizações apt: $(apt list --upgradable 2>/dev/null | grep -c upgradable)"'
+  echo "-- backups no UNAS (horas desde o último; alerta se > 26):"
+  curl -s -m 10 "$PROM/api/v1/query" --data-urlencode 'query=(time() - backup_vzdump_last_timestamp_seconds) / 3600' | jq -r '.data.result[] | "  vzdump VM/LXC \(.metric.vmid): \(.value[1] | tonumber | floor) h"'
+  curl -s -m 10 "$PROM/api/v1/query" --data-urlencode 'query=(time() - backup_app_last_timestamp_seconds) / 3600' | jq -r '.data.result[] | "  \(.metric.app): \(.value[1] | tonumber | floor) h"'
+  curl -s -m 10 "$PROM/api/v1/query" --data-urlencode 'query=backup_nas_free_bytes / 1e9' | jq -r '.data.result[] | "  livre no UNAS: \(.value[1] | tonumber | floor) GB"'; }
 dns() { sec "DNS — AdGuard Home (LXC 107 adguard-1 10.1.1.3, LXC 108 adguard-2 10.1.1.4)"; rsh $PVE 'for c in 107 108; do echo "LXC $c: AdGuardHome=$(pct exec $c -- systemctl is-active AdGuardHome) $( [ $c = 107 ] && echo sync=$(pct exec 107 -- systemctl is-active adguardhome-sync))"; done
   for s in 3 4; do echo "10.1.1.$s google.com=$(dig +short +time=3 @10.1.1.$s google.com A | grep -m1 -E "^[0-9.]+$") doubleclick.net=$(dig +short +time=3 @10.1.1.$s doubleclick.net A | head -1)"; done
   echo "-- última sincronização:"; pct exec 107 -- journalctl -u adguardhome-sync --no-pager -n 50 2>/dev/null | grep -E "Sync done|ERROR" | tail -1 | cut -c1-160'

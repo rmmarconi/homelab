@@ -15,7 +15,7 @@ o Terraform faz a máquina existir, o Ansible deixa ela igual à de hoje.
 | `adguard` | LXC 107/108 (via `pct`) | AdGuard Home com checksum, configuração por API, adguardhome-sync |
 | `mediacenter` | mediacenter | nginx, Shlink, exporters, ufw, ajustes do Jellyfin, backup dos dados no UNAS |
 
-## Backups (UNAS 2, 10.1.1.253, NFS `proxmox_backup`)
+## Backups (UNAS 2, 10.1.1.253, SMB `proxmox_backup`, storage `unas-backup`)
 
 | O quê | Como | Quando | Retenção |
 |---|---|---|---|
@@ -48,4 +48,7 @@ ansible-playbook site.yml --limit pve --tags backup
 - **Proxmox do zero:** reinstalar o PVE, `tar --zstd -xf host-config/pve-*.tar.zst -C /` (exceto `/etc/pve`,
   que volta via `config.db`), depois `ansible-playbook site.yml --limit pve` e o Terraform.
 - **Mediacenter:** reinstalar com o `install-debian.sh`, extrair `apps/mediacenter/mediacenter-*.tar.zst`,
-  `zstd -dc mariadb-all.sql.zst | mysql`, copiar os SQLite de `sqlite/` e rodar o role `mediacenter`.
+  `zstd -dc mariadb-all.sql.zst | mysql`, copiar os bancos de `sqlite/` (cópias consistentes com
+  sufixo `.snapshot`: tirar o sufixo ao restaurar, com o app parado) e rodar o role `mediacenter`.
+- **OpenClaw:** extrair `openclaw-*.tar.zst` (está dentro do vzdump da VM 103, em `/var/backups/homelab`)
+  e renomear os `*.sqlite.snapshot` para `*.sqlite` com o gateway parado.

@@ -20,4 +20,4 @@ Docker Compose em `/opt/monitoring` (fonte: `monitoring/` no repositório).
 - Sondas HTTP: `probe_success{job="blackbox"}`
 
 ## Limiares de alerta
-CPU Proxmox > 70 °C · thin pool > 80% · `/data` > 85% · disco > 55 °C · qualquer `up == 0` por > 10 min · AdGuard Home parado · boot inesperado do Proxmox.
+CPU Proxmox > 70 °C · thin pool > 80% · `/data` > 85% · disco > 55 °C · qualquer `up == 0` por > 10 min · AdGuard Home parado · boot inesperado do Proxmox · **backup de VM/LXC com mais de 26 h** (`backup_vzdump_last_timestamp_seconds`) · backup do mediacenter ou da config do Proxmox com mais de 26 h · UNAS com menos de 100 GB livres.
