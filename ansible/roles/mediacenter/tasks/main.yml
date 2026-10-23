@@ -116,7 +116,7 @@
     path: /mnt/unas-backup
     src: "//{{ nas_ip }}/{{ nas_share }}"
     fstype: cifs
-    opts: credentials=/etc/samba/credentials-unas,vers=3.1.1,uid=0,gid=0,file_mode=0600,dir_mode=0700,noauto,x-systemd.automount,x-systemd.idle-timeout=600,_netdev
+    opts: credentials=/etc/samba/credentials-unas,vers=3.1.1,hard,echo_interval=10,uid=0,gid=0,file_mode=0600,dir_mode=0700,noauto,x-systemd.automount,x-systemd.idle-timeout=600,_netdev
     state: mounted
   become: true
   tags: [backup]

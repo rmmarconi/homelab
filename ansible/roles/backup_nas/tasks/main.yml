@@ -7,7 +7,7 @@
 # O storage SMB é criado uma vez à mão (a senha é digitada pelo Rafael, nunca passa pelo Ansible):
 #   read -rsp "Senha: " P; pvesm add cifs unas-backup --server 10.1.1.253 --share proxmox_backup \
 #     --username proxmox --password "$P" --content backup,iso,vztmpl,snippets \
-#     --prune-backups keep-daily=7,keep-weekly=4,keep-monthly=3
+#     --prune-backups keep-daily=7,keep-weekly=4,keep-monthly=3 --options vers=3.1.1,hard,echo_interval=10
 - name: Storage ativo e montado
   ansible.builtin.command: pvesm status --storage {{ nas_storage_id }}
   register: backup_nas_pvesm_status
@@ -32,7 +32,7 @@
   ansible.builtin.command: >-
     pvesh create /cluster/backup --id homelab-diario --schedule "{{ backup_schedule }}"
     --storage {{ nas_storage_id }} --all 1 --exclude {{ backup_exclude_vmids | join(',') }}
-    --mode snapshot --compress zstd --zstd 2 --enabled 1
+    --mode snapshot --compress zstd --zstd 2 --enabled 1 --bwlimit 40960
     --prune-backups {{ backup_retention }} --notes-template "{{ '{{guestname}}' }}"
     --comment "Backup diário de VMs e LXCs no UNAS (Ansible)"
   when: "'homelab-diario' not in (backup_nas_jobs.stdout | from_json | map(attribute='id') | list)"
