@@ -1,35 +1,32 @@
-# Backups no UniFi UNAS 2 (10.1.1.253, compartilhamento proxmox_backup via NFS).
+# UniFi UNAS 2 (10.1.1.253), compartilhamento SMB proxmox_backup, storage unas-backup:
 #   <storage>/dump/            vzdump de VMs e LXCs (Proxmox gerencia e aplica a retenção)
 #   <storage>/host-config/     configuração do próprio Proxmox (tar.zst diário, 30 dias)
 #   <storage>/apps/<host>/     backups de aplicação (mediacenter empurra direto; VMs ficam dentro do vzdump)
 #   <storage>/git/             repositórios homelab e homelab-terraform (bare)
 
-- name: Storage NFS do UNAS cadastrado
-  ansible.builtin.command: >-
-    pvesm add nfs {{ nas_storage_id }} --server {{ nas_ip }} --export {{ nas_export }}
-    --content backup,iso,vztmpl,snippets --options vers=4.1,soft,timeo=150
-    --prune-backups {{ backup_retention }}
-  register: backup_nas_pvesm_add
-  failed_when: backup_nas_pvesm_add.rc != 0 and 'already defined' not in backup_nas_pvesm_add.stderr
-  changed_when: backup_nas_pvesm_add.rc == 0
-
+# O storage SMB é criado uma vez à mão (a senha é digitada pelo Rafael, nunca passa pelo Ansible):
+#   read -rsp "Senha: " P; pvesm add cifs unas-backup --server 10.1.1.253 --share proxmox_backup \
+#     --username proxmox --password "$P" --content backup,iso,vztmpl,snippets \
+#     --prune-backups keep-daily=7,keep-weekly=4,keep-monthly=3
 - name: Storage ativo e montado
   ansible.builtin.command: pvesm status --storage {{ nas_storage_id }}
   register: backup_nas_pvesm_status
   changed_when: false
+  check_mode: false
   failed_when: "'active' not in backup_nas_pvesm_status.stdout"
 
-- name: Pastas de backup no NAS
+- name: Pastas de backup no NAS (SMB não aceita chmod; permissões vêm da montagem)
   ansible.builtin.file:
     path: "{{ nas_mountpoint }}/{{ item }}"
     state: directory
-    mode: "0750"
+  # noqa: risky-file-permissions
   loop: [host-config, apps, apps/mediacenter, git]
 
 - name: Jobs de backup existentes
   ansible.builtin.command: pvesh get /cluster/backup --output-format json
   register: backup_nas_jobs
   changed_when: false
+  check_mode: false
 
 - name: Job diário de vzdump (todos os convidados ativos)
   ansible.builtin.command: >-
@@ -78,6 +75,7 @@
     enabled: true
     state: started
     daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"  # no check a unit ainda não existe
 
 - name: Métricas de backup para o Prometheus (textfile)
   ansible.builtin.template:

@@ -52,6 +52,13 @@
     state: present
 
 # --- Backup dos dados de aplicação (vai junto no vzdump diário da VM) ---
+- name: Pacotes do backup
+  ansible.builtin.apt:
+    name: [sqlite3, zstd]
+    state: present
+  become: true
+  tags: [backup]
+
 - name: Script de backup do monitor (Grafana + configuração)
   ansible.builtin.copy:
     dest: /usr/local/sbin/monitor-app-backup
@@ -68,6 +75,7 @@
       chmod 600 "$D"/monitor-*.tar.zst
       find "$D" -name 'monitor-*.tar.zst' -mtime +3 -delete
   become: true
+  tags: [backup]
 
 - name: Backup diário do monitor às 01:45 (antes do vzdump das 02:30)
   ansible.builtin.cron:
@@ -76,3 +84,4 @@
     minute: "45"
     job: /usr/local/sbin/monitor-app-backup
   become: true
+  tags: [backup]

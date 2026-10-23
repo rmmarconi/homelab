@@ -16,9 +16,11 @@ openclaw_ip: 10.1.1.20
 # IPv6 de saída não funciona na rede: glibc prefere IPv4 (evita esperas de ~2 min)
 prefer_ipv4: true
 
-# Storage de backup: UniFi UNAS 2 (VLAN 100)
+# Storage de backup: UniFi UNAS 2 (VLAN 100), compartilhamento SMB proxmox_backup
+# (usuário "proxmox" só com acesso a esse compartilhamento; senha só no Proxmox, em
+#  /etc/pve/priv/storage/unas-backup.pw, e no mediacenter, em /etc/samba/credentials-unas)
 nas_ip: 10.1.1.253
-nas_export: /proxmox_backup            # caminho NFS do compartilhamento proxmox_backup
+nas_share: proxmox_backup
 nas_storage_id: unas-backup            # storage no Proxmox (montado em /mnt/pve/unas-backup)
 nas_mountpoint: /mnt/pve/{{ nas_storage_id }}
 

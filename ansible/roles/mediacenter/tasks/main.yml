@@ -101,14 +101,25 @@
   become: true
 
 # --- Backup dos dados do mediacenter direto no UNAS (máquina física, fora do vzdump) ---
-- name: NFS do UNAS montado em /mnt/unas-backup
+- name: Cliente SMB
+  ansible.builtin.apt:
+    name: cifs-utils
+    state: present
+  become: true
+  tags: [backup]
+
+# /etc/samba/credentials-unas (root 600) é copiado do Proxmox sem passar pelo Ansible:
+#   ssh root@10.1.1.254 'P=$(sed -n "s/^password=//p" /etc/pve/priv/storage/unas-backup.pw); printf "username=proxmox\npassword=%s\n" "$P"' \
+#     | ssh mediacenter 'sudo install -d -m 700 /etc/samba && sudo sh -c "umask 077; cat > /etc/samba/credentials-unas"'
+- name: Compartilhamento do UNAS montado sob demanda em /mnt/unas-backup
   ansible.posix.mount:
     path: /mnt/unas-backup
-    src: "{{ nas_ip }}:{{ nas_export }}"
-    fstype: nfs
-    opts: vers=4.1,soft,timeo=150,noauto,x-systemd.automount,x-systemd.idle-timeout=600
+    src: "//{{ nas_ip }}/{{ nas_share }}"
+    fstype: cifs
+    opts: credentials=/etc/samba/credentials-unas,vers=3.1.1,uid=0,gid=0,file_mode=0600,dir_mode=0700,noauto,x-systemd.automount,x-systemd.idle-timeout=600,_netdev
     state: mounted
   become: true
+  tags: [backup]
 
 - name: Script de backup do mediacenter
   ansible.builtin.template:
@@ -116,6 +127,7 @@
     dest: /usr/local/sbin/mediacenter-backup
     mode: "0750"
   become: true
+  tags: [backup]
 
 - name: Backup diário às 03:30
   ansible.builtin.cron:
@@ -124,3 +136,4 @@
     minute: "30"
     job: /usr/local/sbin/mediacenter-backup >> /var/log/mediacenter-backup.log 2>&1
   become: true
+  tags: [backup]

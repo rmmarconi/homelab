@@ -60,6 +60,13 @@
   notify: Reload nginx
 
 # --- Backup do estado do OpenClaw (vai junto no vzdump diário da VM) ---
+- name: Pacotes do backup
+  ansible.builtin.apt:
+    name: [sqlite3, zstd]
+    state: present
+  become: true
+  tags: [backup]
+
 - name: Script de backup do OpenClaw
   ansible.builtin.copy:
     dest: /usr/local/sbin/openclaw-app-backup
@@ -74,15 +81,18 @@
       for db in "$H"/.openclaw/state/openclaw.sqlite "$H"/.openclaw/agents/*/agent/openclaw-agent.sqlite; do
         [ -f "$db" ] || continue
         rel=${db#$H/}; mkdir -p "$T/$(dirname "$rel")"
-        sqlite3 "$db" ".backup '$T/$rel'"
+        # cópia consistente com o OpenClaw rodando; restaurar renomeando .snapshot -> .sqlite
+        sqlite3 "$db" ".backup '$T/$rel.snapshot'"
       done
       tar --zstd -cf "$D/openclaw-$(date +%Y%m%d).tar.zst" \
-        --exclude='*.sqlite' --exclude='*.sqlite-wal' --exclude='*.sqlite-shm' --exclude='.openclaw/npm' \
-        --exclude='.openclaw/backups' --exclude='node_modules' \
+        --exclude='*.sqlite' --exclude='*.sqlite-wal' --exclude='*.sqlite-shm' \
+        --exclude='.openclaw/npm' --exclude='.openclaw/tmp' --exclude='.openclaw/cache' \
+        --exclude='.openclaw/geolocation' --exclude='.openclaw/backups' --exclude='node_modules' \
         -C "$H" .openclaw .config/homelab -C "$T" .
       chmod 600 "$D"/openclaw-*.tar.zst
       find "$D" -name 'openclaw-*.tar.zst' -mtime +3 -delete
   become: true
+  tags: [backup]
 
 - name: Backup diário do OpenClaw às 01:50
   ansible.builtin.cron:
@@ -91,3 +101,4 @@
     minute: "50"
     job: /usr/local/sbin/openclaw-app-backup
   become: true
+  tags: [backup]
