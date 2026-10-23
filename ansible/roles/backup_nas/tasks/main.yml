@@ -32,7 +32,7 @@
   ansible.builtin.command: >-
     pvesh create /cluster/backup --id homelab-diario --schedule "{{ backup_schedule }}"
     --storage {{ nas_storage_id }} --all 1 --exclude {{ backup_exclude_vmids | join(',') }}
-    --mode snapshot --compress zstd --zstd 2 --enabled 1 --bwlimit 40960
+    --mode snapshot --compress zstd --zstd 2 --enabled 1
     --prune-backups {{ backup_retention }} --notes-template "{{ '{{guestname}}' }}"
     --comment "Backup diário de VMs e LXCs no UNAS (Ansible)"
   when: "'homelab-diario' not in (backup_nas_jobs.stdout | from_json | map(attribute='id') | list)"
