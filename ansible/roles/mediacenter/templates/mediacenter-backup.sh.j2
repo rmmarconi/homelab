@@ -1,0 +1,33 @@
+#!/bin/sh
+# Backup dos dados de aplicação do mediacenter no UNAS (gerado pelo Ansible).
+# Não copia a mídia de /data (3,2 TB, rebaixável); copia o que dá trabalho refazer:
+# configurações e bancos dos *arr/Jellyfin/Seerr/qBittorrent, Shlink, WordPress do
+# marconi3dlab, nginx, certificados e dumps do MariaDB.
+set -eu
+DEST=/mnt/unas-backup/apps/mediacenter
+ls "$DEST" >/dev/null 2>&1 || { echo "UNAS indisponível" >&2; exit 1; }
+DIA=$(date +%Y%m%d)
+T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+
+# bancos MariaDB (WordPress do marconi3dlab, Shlink, ...): dump consistente
+mysqldump --all-databases --single-transaction --routines --events --default-character-set=utf8mb4 \
+  | zstd -q -o "$T/mariadb-all.sql.zst"
+
+# SQLite dos apps com cópia consistente (os *arr e o Jellyfin usam SQLite)
+find /var/lib/mediacenter /var/lib/jellyfin/data -maxdepth 4 -name '*.db' -size +0 2>/dev/null | while read -r db; do
+  out="$T/sqlite${db}"; mkdir -p "$(dirname "$out")"
+  sqlite3 "$db" ".backup '$out'" 2>/dev/null || cp -p "$db" "$out"
+done
+
+tar --zstd -cf "$DEST/mediacenter-$DIA.tar.zst.tmp" --warning=no-file-changed --ignore-failed-read \
+  --exclude='*.db' --exclude='*.db-wal' --exclude='*.db-shm' \
+  --exclude='*/MediaCover/*' --exclude='*/logs/*' --exclude='*/cache/*' --exclude='*/Backups/scheduled/*' \
+  /etc/nginx /etc/letsencrypt /etc/php/8.4/fpm/pool.d /etc/shlink /etc/exportarr /etc/systemd/system \
+  /etc/jellyfin /var/lib/jellyfin/plugins /var/lib/mediacenter /etc/seerr /opt/shlink/data \
+  /var/www/marconi3dlab /usr/local/bin /usr/local/sbin /etc/cron.d /etc/ufw \
+  -C "$T" .
+mv "$DEST/mediacenter-$DIA.tar.zst.tmp" "$DEST/mediacenter-$DIA.tar.zst"
+chmod 600 "$DEST/mediacenter-$DIA.tar.zst"
+# retenção: 14 diários
+find "$DEST" -name 'mediacenter-*.tar.zst' -mtime +14 -delete
+echo "$(date -Is) ok $(du -h "$DEST/mediacenter-$DIA.tar.zst" | cut -f1)"

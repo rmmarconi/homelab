@@ -1,0 +1,34 @@
+# Configuração de todo o homelab. Rode primeiro com --check --diff.
+#   ansible-playbook site.yml --check --diff
+#   ansible-playbook site.yml --limit pve --tags backup
+- name: Proxmox (host, rede, kernel, backups)
+  hosts: proxmox
+  roles:
+    - { role: common, tags: [common] }
+    - { role: proxmox_host, tags: [proxmox] }
+    - { role: backup_nas, tags: [backup] }
+    - { role: homeassistant, tags: [homeassistant] }
+
+- name: VM monitor (Prometheus, Grafana, Loki, exporters)
+  hosts: monitor
+  roles:
+    - { role: common, tags: [common] }
+    - { role: monitor, tags: [monitor] }
+
+- name: VM openclaw (agentes, métricas)
+  hosts: openclaw
+  roles:
+    - { role: common, tags: [common] }
+    - { role: openclaw, tags: [openclaw] }
+
+- name: DNS (AdGuard Home)
+  hosts: dns
+  roles:
+    - { role: common, tags: [common] }
+    - { role: adguard, tags: [adguard] }
+
+- name: Mediacenter (Jellyfin, *arr, Shlink, nginx)
+  hosts: mediacenter_hosts
+  roles:
+    - { role: common, tags: [common] }
+    - { role: mediacenter, tags: [mediacenter] }

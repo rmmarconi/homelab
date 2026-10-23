@@ -1,0 +1,93 @@
+# VM openclaw: OpenClaw (npm global do usuário), ferramentas hl-*, métricas e backup do estado.
+- name: Pacotes
+  ansible.builtin.apt:
+    name: [nodejs, npm, nginx, sqlite3, zstd, poppler-utils, fonts-inter, fonts-noto-core, libasound2t64]
+    state: present
+  become: true
+
+- name: OpenClaw na versão fixada
+  community.general.npm:
+    name: openclaw
+    version: "{{ openclaw_version }}"
+    global: true
+  environment:
+    NPM_CONFIG_PREFIX: "{{ ansible_env.HOME }}/.npm-global"
+
+- name: Ferramentas do homelab (hl-*)
+  ansible.posix.synchronize:
+    src: "{{ repo_root }}/openclaw/bin/"
+    dest: "{{ ansible_env.HOME }}/.openclaw/tools/homelab/bin/"
+
+- name: Base de conhecimento dos agentes
+  ansible.posix.synchronize:
+    src: "{{ repo_root }}/openclaw/docs/"
+    dest: "{{ ansible_env.HOME }}/.openclaw/workspace/docs/homelab/"
+
+- name: Exportador de inventário (textfile do node-exporter)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/openclaw/metrics/openclaw-inventory-exporter"
+    dest: "{{ ansible_env.HOME }}/.local/bin/openclaw-inventory-exporter"
+    mode: "0755"
+
+- name: Units do exportador
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/openclaw/metrics/{{ item }}"
+    dest: "{{ ansible_env.HOME }}/.config/systemd/user/{{ item }}"
+    mode: "0644"
+  loop: [openclaw-inventory-exporter.service, openclaw-inventory-exporter.timer]
+
+- name: Proxy de métricas do gateway (só para o monitor)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/openclaw/metrics/openclaw-metrics.nginx.conf"
+    dest: /etc/nginx/sites-available/openclaw-metrics
+    mode: "0644"
+  become: true
+  notify: Reload nginx
+
+- name: Token do gateway para o nginx (sem expor)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/openclaw/metrics/openclaw-metrics-token-sync"
+    dest: /usr/local/sbin/openclaw-metrics-token-sync
+    mode: "0755"
+  become: true
+
+- name: Site de métricas habilitado
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/openclaw-metrics
+    dest: /etc/nginx/sites-enabled/openclaw-metrics
+    state: link
+  become: true
+  notify: Reload nginx
+
+# --- Backup do estado do OpenClaw (vai junto no vzdump diário da VM) ---
+- name: Script de backup do OpenClaw
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/openclaw-app-backup
+    mode: "0750"
+    content: |
+      #!/bin/sh
+      # Estado do OpenClaw: SQLite com cópia consistente + config, workspaces e agentes.
+      # Contém segredos (openclaw.json, credenciais): arquivo 600, só root.
+      set -eu
+      H=/home/{{ ansible_user }}; D=/var/backups/homelab; mkdir -p "$D"; chmod 700 "$D"
+      T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+      for db in "$H"/.openclaw/state/openclaw.sqlite "$H"/.openclaw/agents/*/agent/openclaw-agent.sqlite; do
+        [ -f "$db" ] || continue
+        rel=${db#$H/}; mkdir -p "$T/$(dirname "$rel")"
+        sqlite3 "$db" ".backup '$T/$rel'"
+      done
+      tar --zstd -cf "$D/openclaw-$(date +%Y%m%d).tar.zst" \
+        --exclude='*.sqlite' --exclude='*.sqlite-wal' --exclude='*.sqlite-shm' --exclude='.openclaw/npm' \
+        --exclude='.openclaw/backups' --exclude='node_modules' \
+        -C "$H" .openclaw .config/homelab -C "$T" .
+      chmod 600 "$D"/openclaw-*.tar.zst
+      find "$D" -name 'openclaw-*.tar.zst' -mtime +3 -delete
+  become: true
+
+- name: Backup diário do OpenClaw às 01:50
+  ansible.builtin.cron:
+    name: openclaw-app-backup
+    hour: "1"
+    minute: "50"
+    job: /usr/local/sbin/openclaw-app-backup
+  become: true

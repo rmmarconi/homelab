@@ -1,0 +1,28 @@
+# Home Assistant OS (VM 105) não tem Python/SSH para o Ansible: este role roda no Proxmox
+# e entrega os pacotes YAML de homelab/homeassistant/packages via qemu-guest-agent.
+- name: Pacotes do HA no controlador
+  ansible.builtin.find:
+    paths: "{{ repo_root }}/homeassistant/packages"
+    patterns: "*.yaml"
+  register: homeassistant_ha_pkgs
+  delegate_to: localhost
+
+- name: Copiar pacotes para o Proxmox
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "/root/ha-packages/{{ item.path | basename }}"
+    mode: "0600"
+  loop: "{{ homeassistant_ha_pkgs.files }}"
+  loop_control: { label: "{{ item.path | basename }}" }
+  register: homeassistant_ha_copy
+
+- name: Enviar para /config/packages na VM 105 (só os que mudaram)
+  ansible.builtin.shell: >-
+    qm guest exec 105 --pass-stdin 1 --
+    sh -c "docker exec -i homeassistant sh -c 'cat > /config/packages/{{ item.item.path | basename }}'"
+    < /root/ha-packages/{{ item.item.path | basename }}
+  loop: "{{ homeassistant_ha_copy.results }}"
+  loop_control: { label: "{{ item.item.path | basename }}" }
+  when: item.changed  # noqa: no-handler
+  notify: Check and restart Home Assistant
+  changed_when: true

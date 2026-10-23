@@ -1,0 +1,93 @@
+# Backups no UniFi UNAS 2 (10.1.1.253, compartilhamento proxmox_backup via NFS).
+#   <storage>/dump/            vzdump de VMs e LXCs (Proxmox gerencia e aplica a retenção)
+#   <storage>/host-config/     configuração do próprio Proxmox (tar.zst diário, 30 dias)
+#   <storage>/apps/<host>/     backups de aplicação (mediacenter empurra direto; VMs ficam dentro do vzdump)
+#   <storage>/git/             repositórios homelab e homelab-terraform (bare)
+
+- name: Storage NFS do UNAS cadastrado
+  ansible.builtin.command: >-
+    pvesm add nfs {{ nas_storage_id }} --server {{ nas_ip }} --export {{ nas_export }}
+    --content backup,iso,vztmpl,snippets --options vers=4.1,soft,timeo=150
+    --prune-backups {{ backup_retention }}
+  register: backup_nas_pvesm_add
+  failed_when: backup_nas_pvesm_add.rc != 0 and 'already defined' not in backup_nas_pvesm_add.stderr
+  changed_when: backup_nas_pvesm_add.rc == 0
+
+- name: Storage ativo e montado
+  ansible.builtin.command: pvesm status --storage {{ nas_storage_id }}
+  register: backup_nas_pvesm_status
+  changed_when: false
+  failed_when: "'active' not in backup_nas_pvesm_status.stdout"
+
+- name: Pastas de backup no NAS
+  ansible.builtin.file:
+    path: "{{ nas_mountpoint }}/{{ item }}"
+    state: directory
+    mode: "0750"
+  loop: [host-config, apps, apps/mediacenter, git]
+
+- name: Jobs de backup existentes
+  ansible.builtin.command: pvesh get /cluster/backup --output-format json
+  register: backup_nas_jobs
+  changed_when: false
+
+- name: Job diário de vzdump (todos os convidados ativos)
+  ansible.builtin.command: >-
+    pvesh create /cluster/backup --id homelab-diario --schedule "{{ backup_schedule }}"
+    --storage {{ nas_storage_id }} --all 1 --exclude {{ backup_exclude_vmids | join(',') }}
+    --mode snapshot --compress zstd --zstd 2 --enabled 1
+    --prune-backups {{ backup_retention }} --notes-template "{{ '{{guestname}}' }}"
+    --comment "Backup diário de VMs e LXCs no UNAS (Ansible)"
+  when: "'homelab-diario' not in (backup_nas_jobs.stdout | from_json | map(attribute='id') | list)"
+  changed_when: true
+
+- name: Script de backup da configuração do Proxmox
+  ansible.builtin.template:
+    src: pve-config-backup.sh.j2
+    dest: /usr/local/sbin/pve-config-backup
+    mode: "0750"
+
+- name: Units do backup de configuração
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: "0644"
+  loop:
+    - name: pve-config-backup.service
+      content: |
+        [Unit]
+        Description=Backup da configuração do Proxmox no UNAS
+        RequiresMountsFor={{ nas_mountpoint }}
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/sbin/pve-config-backup
+    - name: pve-config-backup.timer
+      content: |
+        [Unit]
+        Description=Backup diário da configuração do Proxmox
+        [Timer]
+        OnCalendar=*-*-* 02:00
+        Persistent=true
+        RandomizedDelaySec=5min
+        [Install]
+        WantedBy=timers.target
+
+- name: Timer do backup de configuração
+  ansible.builtin.systemd_service:
+    name: pve-config-backup.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Métricas de backup para o Prometheus (textfile)
+  ansible.builtin.template:
+    src: backup-metrics.sh.j2
+    dest: /usr/local/sbin/backup-metrics
+    mode: "0750"
+
+- name: Coleta das métricas de backup a cada 15 min
+  ansible.builtin.cron:
+    name: backup-metrics
+    minute: "*/15"
+    job: /usr/local/sbin/backup-metrics
+    user: root

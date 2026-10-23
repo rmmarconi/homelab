@@ -1,0 +1,126 @@
+# Mediacenter (Debian 13, bare metal). Os apps (Jellyfin, *arr, qBittorrent, Seerr, FlareSolverr)
+# são instalados pelo install-debian.sh do Rafael (repositório rmediacenter); aqui ficam os ajustes
+# feitos depois: nginx, Shlink, exporters, ufw, Jellyfin, receptor de logs e backup no UNAS.
+- name: Pacotes
+  ansible.builtin.apt:
+    name: [nginx, php8.4-fpm, php8.4-intl, php8.4-gd, php8.4-gmp, php8.4-bcmath, php8.4-apcu, php8.4-mysql,
+           mariadb-server, socat, ufw, smartmontools, xvfb, zstd, sqlite3, nfs-common, certbot]
+    state: present
+  become: true
+
+- name: Sites e snippets do nginx
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/ansible/files/mediacenter/etc/nginx/{{ item }}"
+    dest: "/etc/nginx/{{ item }}"
+    mode: "0644"
+  loop:
+    - sites-available/mediacenter.conf
+    - sites-available/short.x7velo.com
+    - sites-available/shlink-web.conf
+    - sites-available/marconi3dlab.com.br
+    - snippets/cloudflare-realip.conf
+  become: true
+  notify: Reload nginx
+
+- name: Sites habilitados
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ item }}"
+    dest: "/etc/nginx/sites-enabled/{{ item }}"
+    state: link
+    force: true
+  loop: [mediacenter.conf, short.x7velo.com, shlink-web.conf, marconi3dlab.com.br]
+  become: true
+  notify: Reload nginx
+
+- name: Pool php-fpm do Shlink (chave da MaxMind do vault)
+  ansible.builtin.template:
+    src: "{{ repo_root }}/ansible/templates/mediacenter/shlink-pool.conf.j2"
+    dest: /etc/php/8.4/fpm/pool.d/shlink.conf
+    mode: "0640"
+  become: true
+  no_log: true
+  notify: Reload php-fpm
+
+- name: Shlink — scripts e tarefas
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/mediacenter/shlink/{{ item.src }}"
+    dest: "/{{ item.src }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: usr/local/bin/shlink, mode: "0755" }
+    - { src: usr/local/sbin/shlink-set-geolite, mode: "0750" }
+    - { src: etc/cron.d/shlink, mode: "0644" }
+  become: true
+
+- name: Exporters (*arr, node-exporter com systemd e SMART) e receptor de logs do Proxmox
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/ansible/files/mediacenter/{{ item }}"
+    dest: "/{{ item }}"
+    mode: "0644"
+  loop:
+    - etc/systemd/system/exportarr@.service
+    - etc/systemd/system/exportarr@bazarr.service.d/override.conf
+    - etc/systemd/system/netconsole-pve.service
+    - etc/systemd/system/seerr.service.d/10-mediacenter-user.conf
+    - etc/default/prometheus-node-exporter
+    - etc/exportarr/radarr.env
+    - etc/exportarr/sonarr.env
+    - etc/exportarr/lidarr.env
+    - etc/exportarr/prowlarr.env
+    - etc/exportarr/bazarr.env
+  become: true
+  notify: Reload systemd
+
+- name: Serviços ativos
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: [exportarr@radarr, exportarr@sonarr, exportarr@lidarr, exportarr@prowlarr, exportarr@bazarr,
+         netconsole-pve, prometheus-node-exporter]
+  become: true
+
+- name: Ufw — métricas e logs só para quem precisa
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto | default('tcp') }}"
+    from_ip: "{{ item.from }}"
+    comment: "{{ item.comment }}"
+  loop:
+    - { port: "9100", from: "{{ monitor_ip }}", comment: prometheus monitor }
+    - { port: "9707:9711", from: "{{ monitor_ip }}", comment: prometheus monitor }
+    - { port: "6666", proto: udp, from: "{{ proxmox_ip }}", comment: netconsole pve }
+  become: true
+
+- name: Ajustes do Jellyfin (VAAPI, proxy, métricas, trickplay) — aplica só sem ninguém assistindo
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/mediacenter/jellyfin/jellyfin-tuning-2026-10"
+    dest: /usr/local/sbin/jellyfin-tuning-2026-10
+    mode: "0750"
+  become: true
+
+# --- Backup dos dados do mediacenter direto no UNAS (máquina física, fora do vzdump) ---
+- name: NFS do UNAS montado em /mnt/unas-backup
+  ansible.posix.mount:
+    path: /mnt/unas-backup
+    src: "{{ nas_ip }}:{{ nas_export }}"
+    fstype: nfs
+    opts: vers=4.1,soft,timeo=150,noauto,x-systemd.automount,x-systemd.idle-timeout=600
+    state: mounted
+  become: true
+
+- name: Script de backup do mediacenter
+  ansible.builtin.template:
+    src: mediacenter-backup.sh.j2
+    dest: /usr/local/sbin/mediacenter-backup
+    mode: "0750"
+  become: true
+
+- name: Backup diário às 03:30
+  ansible.builtin.cron:
+    name: mediacenter-backup
+    hour: "3"
+    minute: "30"
+    job: /usr/local/sbin/mediacenter-backup >> /var/log/mediacenter-backup.log 2>&1
+  become: true

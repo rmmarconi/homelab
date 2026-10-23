@@ -1,0 +1,42 @@
+server {
+    server_name marconi3dlab.com.br www.marconi3dlab.com.br;
+    root /var/www/marconi3dlab;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;	    
+    }
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/marconi3dlab.com.br/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/marconi3dlab.com.br/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+    access_log /var/log/nginx/marconi3dlab.access.log;
+    error_log  /var/log/nginx/marconi3dlab.error.log;
+    
+    client_max_body_size 20M;   # upload de .torrent em lote
+
+
+}
+server {
+    if ($host = marconi3dlab.com.br) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name marconi3dlab.com.br www.marconi3dlab.com.br;
+    return 404; # managed by Certbot
+
+
+}

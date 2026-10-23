@@ -1,0 +1,10 @@
+[Unit]
+Description=Envia journal em tempo real para 10.1.1.100:6666 (UDP)
+After=network-online.target
+Wants=network-online.target
+[Service]
+ExecStart=/bin/sh -c "journalctl -f -n 0 -o short-iso | socat -u - UDP-SENDTO:10.1.1.100:6666"
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=multi-user.target

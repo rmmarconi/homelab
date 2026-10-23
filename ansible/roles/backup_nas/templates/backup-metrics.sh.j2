@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""Métricas dos backups no UNAS para o node-exporter (textfile). Gerado pelo Ansible."""
+import glob, json, os, re, subprocess, time
+
+OUT = "{{ node_exporter_textfile_dir }}/backup.prom"
+MNT = "{{ nas_mountpoint }}"
+L = []
+
+def m(name, value, help_, **lab):
+    if not any(x.startswith(f"# HELP {name} ") for x in L):
+        L.extend([f"# HELP {name} {help_}", f"# TYPE {name} gauge"])
+    lab_s = ",".join(f'{k}="{v}"' for k, v in lab.items())
+    L.append(f"{name}{{{lab_s}}} {value}" if lab else f"{name} {value}")
+
+montado = os.path.ismount(MNT)
+m("backup_nas_mounted", int(montado), "NAS de backup montado no Proxmox")
+if montado:
+    st = os.statvfs(MNT)
+    m("backup_nas_size_bytes", st.f_blocks * st.f_frsize, "Tamanho do compartilhamento")
+    m("backup_nas_free_bytes", st.f_bavail * st.f_frsize, "Espaço livre no compartilhamento")
+    # último vzdump por convidado
+    ult = {}
+    for f in glob.glob(f"{MNT}/dump/vzdump-*-*-*.*"):
+        mm = re.search(r"vzdump-(qemu|lxc)-(\d+)-(\d{4}_\d\d_\d\d-\d\d_\d\d_\d\d)", f)
+        if not mm or f.endswith((".log", ".notes")):
+            continue
+        vmid = mm.group(2)
+        t = os.path.getmtime(f)
+        if t > ult.get(vmid, (0, 0))[0]:
+            ult[vmid] = (t, os.path.getsize(f))
+    for vmid, (t, sz) in ult.items():
+        m("backup_vzdump_last_timestamp_seconds", int(t), "Último vzdump do convidado", vmid=vmid)
+        m("backup_vzdump_last_size_bytes", sz, "Tamanho do último vzdump", vmid=vmid)
+    for nome, padrao in (("host-config", "host-config/pve-*.tar.zst"), ("mediacenter", "apps/mediacenter/*.tar.zst")):
+        fs = glob.glob(f"{MNT}/{padrao}")
+        if fs:
+            ultimo = max(fs, key=os.path.getmtime)
+            m("backup_app_last_timestamp_seconds", int(os.path.getmtime(ultimo)), "Último backup de aplicação", app=nome)
+            m("backup_app_last_size_bytes", os.path.getsize(ultimo), "Tamanho do último backup de aplicação", app=nome)
+m("backup_metrics_last_run_timestamp_seconds", int(time.time()), "Última coleta")
+tmp = OUT + ".tmp"
+open(tmp, "w").write("\n".join(L) + "\n")
+os.replace(tmp, OUT)

@@ -1,0 +1,26 @@
+[Unit]
+Description=Exportarr (métricas Prometheus) para %i
+After=network-online.target %i.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mediacenter
+Group=mediacenter
+EnvironmentFile=/etc/exportarr/%i.env
+# Lê a API key direto do config.xml do app: nenhuma chave fica em arquivo de unit
+ExecStart=/usr/local/bin/exportarr %i --url http://127.0.0.1:${APP_PORT} --config /var/lib/mediacenter/%i/config.xml --interface 0.0.0.0 --port ${EXPORTER_PORT} --enable-additional-metrics
+Restart=on-failure
+RestartSec=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadOnlyPaths=/var/lib/mediacenter
+
+[Install]
+WantedBy=multi-user.target

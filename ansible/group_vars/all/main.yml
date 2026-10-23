@@ -1,0 +1,30 @@
+# Variáveis comuns do homelab. Segredos ficam em vault.yml (ansible-vault), com prefixo vault_.
+repo_root: "{{ playbook_dir }}/.."
+
+timezone: America/Bahia
+lan_subnets: [10.1.0.0/24, 10.1.1.0/24, 10.1.2.0/24]
+servers_gateway: 10.1.1.1
+dns_servers: [10.1.1.3, 10.1.1.4]
+ipv6_prefix: "2804:4c1c:2a:8601"
+
+monitor_ip: 10.1.1.15
+proxmox_ip: 10.1.1.254
+mediacenter_ip: 10.1.1.100
+homeassistant_ip: 10.1.1.11
+openclaw_ip: 10.1.1.20
+
+# IPv6 de saída não funciona na rede: glibc prefere IPv4 (evita esperas de ~2 min)
+prefer_ipv4: true
+
+# Storage de backup: UniFi UNAS 2 (VLAN 100)
+nas_ip: 10.1.1.253
+nas_export: /proxmox_backup            # caminho NFS do compartilhamento proxmox_backup
+nas_storage_id: unas-backup            # storage no Proxmox (montado em /mnt/pve/unas-backup)
+nas_mountpoint: /mnt/pve/{{ nas_storage_id }}
+
+# vzdump: todos os convidados ativos, todo dia 02:30, com retenção
+backup_schedule: "02:30"
+backup_retention: keep-daily=7,keep-weekly=4,keep-monthly=3
+backup_exclude_vmids: [100, 101, 106]  # Pi-holes e nebula-sync antigos (parados)
+
+node_exporter_textfile_dir: /var/lib/prometheus/node-exporter

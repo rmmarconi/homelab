@@ -1,0 +1,2 @@
+# Gerado para o monitoramento do homelab (Prometheus em 10.1.1.15)
+ARGS="--collector.systemd --collector.systemd.unit-include=(jellyfin|seerr|qbittorrent|prowlarr|radarr|sonarr|lidarr|bazarr|jellyseerr|flaresolverr|exportarr@.+|prometheus-node-exporter.*)\.service --collector.textfile.directory=/var/lib/prometheus/node-exporter"

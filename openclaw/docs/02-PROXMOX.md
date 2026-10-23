@@ -16,8 +16,8 @@
 | 103 | openclaw | 4/4 GB | este agente (gateway usa ~1,7 GB) |
 | 105 | homeassistant | 4/3 GB, disco 182 GB | HAOS; balloon desligado |
 | 106 | nebula-sync (LXC) | 2/512 MB | **parado** desde 2026-10-20 |
-| 107 | adguard-1 (LXC) | 2/768 MB | DNS primário 10.1.1.3 (AdGuard Home + adguardhome-sync) |
-| 108 | adguard-2 (LXC) | 2/768 MB | DNS secundário 10.1.1.4 (AdGuard Home) |
+| 107 | adguard-1 (LXC) | 2/1024 MB | DNS primário 10.1.1.3 (AdGuard Home + adguardhome-sync) |
+| 108 | adguard-2 (LXC) | 2/1024 MB | DNS secundário 10.1.1.4 (AdGuard Home) |
 
 ## Verificações úteis (leitura)
 

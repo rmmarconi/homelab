@@ -24,6 +24,15 @@ for f in cfg["filters"]:
         api("/control/filtering/add_url", {"name": f["name"], "url": f["url"], "whitelist": False})
 api("/control/filtering/set_rules", {"rules": cfg["user_rules"]})
 api("/control/filtering/refresh", {"whitelist": False})
+prot = cfg.get("protection", {})
+if "parental" in prot:
+    api("/control/parental/" + ("enable" if prot["parental"] else "disable"), {})
+if "safebrowsing" in prot:
+    api("/control/safebrowsing/" + ("enable" if prot["safebrowsing"] else "disable"), {})
+have_rw = {(r["domain"], r["answer"]) for r in api("/control/rewrite/list") or []}
+for r in cfg.get("rewrites", []):
+    if (r["domain"], r["answer"]) not in have_rw:
+        api("/control/rewrite/add", {"domain": r["domain"], "answer": r["answer"], "enabled": True})
 st = api("/control/filtering/status")
 tot = sum(f.get("rules_count", 0) for f in st.get("filters") or [])
 print("listas:", len(st.get("filters") or []), "| regras carregadas:", tot, "| regras do usuário:", len(st.get("user_rules") or []))

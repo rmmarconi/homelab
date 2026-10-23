@@ -1,0 +1,18 @@
+# Modelo dos segredos. Crie o arquivo real criptografado (nunca commite em texto puro):
+#
+#   cp vault.example.yml group_vars/all/vault.yml
+#   ansible-vault encrypt group_vars/all/vault.yml     # senha em ~/.config/homelab/ansible-vault-pass
+#
+# Os valores reais hoje estão nos servidores:
+#   AdGuard admin ............ /root/adguard-admin.txt (Proxmox)
+#   Grafana/UnPoller/PVE/... . /opt/monitoring/.env (monitor)
+#   Shlink DB / GeoLite ...... /etc/shlink/db_password, pool do php-fpm (mediacenter)
+vault_adguard_admin_password: "TROCAR"
+vault_grafana_admin_password: "TROCAR"
+vault_unpoller_password: "TROCAR"
+vault_pihole_password: ""                 # não usado desde o AdGuard
+vault_pve_monitor_token: "TROCAR"         # monitor@pve!prometheus
+vault_jellyfin_api_key: "TROCAR"
+vault_ha_prometheus_token: "TROCAR"
+vault_shlink_db_password: "TROCAR"
+vault_shlink_geolite_license_key: "TROCAR"

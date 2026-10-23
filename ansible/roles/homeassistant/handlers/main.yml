@@ -1,0 +1,9 @@
+- name: Check and restart Home Assistant
+  ansible.builtin.shell: |
+    set -eo pipefail
+    out=$(qm guest exec 105 --timeout 300 -- sh -c "docker exec hassio_cli ha core check --raw-json")
+    echo "$out" | grep -q '\\"result\\":\\"ok\\"' || { echo "$out"; exit 1; }
+    qm guest exec 105 --timeout 600 -- sh -c "docker exec hassio_cli ha core restart --raw-json"
+  args:
+    executable: /bin/bash
+  changed_when: true

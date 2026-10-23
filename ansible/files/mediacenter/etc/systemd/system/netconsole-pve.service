@@ -1,0 +1,11 @@
+[Unit]
+Description=Receptor netconsole do Proxmox 10.1.1.254 (UDP 6666)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/bin/sh -c "exec /usr/bin/socat -u UDP-RECV:6666,bind=10.1.1.100,reuseaddr STDOUT | while IFS= read -r l; do printf \"%%s %%s\n\" \"$(date -Is)\" \"$l\"; done >> /var/log/netconsole-pve.log"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

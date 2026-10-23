@@ -59,7 +59,8 @@
   "||doubleclick.net^$important",
   "||mgid.com^$important",
   "||outbrain.com^$important",
-  "||taboola.com^$important"
+  "||taboola.com^$important",
+  "@@||bj-share.info^$important"
  ],
  "dns": {
   "upstream_dns": [
@@ -93,5 +94,27 @@
  "filtering": {
   "enabled": true,
   "interval": 24
- }
+ },
+ "protection": {
+  "parental": false,
+  "safebrowsing": true
+ },
+ "rewrites": [
+  {
+   "domain": "media.rafaelmarconi.com.br",
+   "answer": "10.1.1.100"
+  },
+  {
+   "domain": "*.media.rafaelmarconi.com.br",
+   "answer": "10.1.1.100"
+  },
+  {
+   "domain": "marconi3dlab.com.br",
+   "answer": "10.1.1.100"
+  },
+  {
+   "domain": "www.marconi3dlab.com.br",
+   "answer": "10.1.1.100"
+  }
+ ]
 }

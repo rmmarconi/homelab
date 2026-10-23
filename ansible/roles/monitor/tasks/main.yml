@@ -1,0 +1,78 @@
+# VM monitor: stack de observabilidade em Docker Compose (/opt/monitoring),
+# a partir de homelab/monitoring/ (fonte da verdade no git).
+- name: Docker e Compose
+  ansible.builtin.apt:
+    name: [docker.io, docker-compose-v2, sqlite3, zstd, rsync]
+    state: present
+  become: true
+
+- name: Usuário no grupo docker
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+  become: true
+
+- name: Diretório da stack
+  ansible.builtin.file:
+    path: /opt/monitoring
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "0755"
+  become: true
+
+- name: Arquivos da stack (sem segredos e sem dados)
+  ansible.posix.synchronize:
+    src: "{{ repo_root }}/monitoring/"
+    dest: /opt/monitoring/
+    rsync_opts: ["--exclude=.env", "--exclude=secrets/", "--exclude=._*", "--exclude=*.bak*"]
+  notify: Compose up
+
+- name: Segredos da stack (.env a partir do vault)
+  ansible.builtin.template:
+    src: env.j2
+    dest: /opt/monitoring/.env
+    mode: "0600"
+  no_log: true
+  notify: Compose recreate
+
+- name: Token do Home Assistant para o Prometheus
+  ansible.builtin.copy:
+    dest: /opt/monitoring/secrets/ha_token
+    content: "{{ vault_ha_prometheus_token }}"
+    owner: "65534"
+    group: "65534"
+    mode: "0400"
+  become: true
+  no_log: true
+
+- name: Stack no ar
+  community.docker.docker_compose_v2:
+    project_src: /opt/monitoring
+    state: present
+
+# --- Backup dos dados de aplicação (vai junto no vzdump diário da VM) ---
+- name: Script de backup do monitor (Grafana + configuração)
+  ansible.builtin.copy:
+    dest: /usr/local/sbin/monitor-app-backup
+    mode: "0750"
+    content: |
+      #!/bin/sh
+      # Banco do Grafana (cópia consistente) + configuração da stack. Prometheus/Loki ficam no vzdump.
+      set -eu
+      D=/var/backups/homelab; mkdir -p "$D"; chmod 700 "$D"
+      T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+      V=$(docker volume inspect -f '{{ "{{" }}.Mountpoint{{ "}}" }}' monitoring_grafana-data 2>/dev/null || true)
+      [ -n "$V" ] && sqlite3 "$V/grafana.db" ".backup '$T/grafana.db'"
+      tar --zstd -cf "$D/monitor-$(date +%Y%m%d).tar.zst" -C / opt/monitoring --exclude='opt/monitoring/data' -C "$T" .
+      chmod 600 "$D"/monitor-*.tar.zst
+      find "$D" -name 'monitor-*.tar.zst' -mtime +3 -delete
+  become: true
+
+- name: Backup diário do monitor às 01:45 (antes do vzdump das 02:30)
+  ansible.builtin.cron:
+    name: monitor-app-backup
+    hour: "1"
+    minute: "45"
+    job: /usr/local/sbin/monitor-app-backup
+  become: true

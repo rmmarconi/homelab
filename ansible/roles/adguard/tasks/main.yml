@@ -1,0 +1,147 @@
+# AdGuard Home nos LXCs 107 (primário) e 108 (réplica), mesma rede dos Pi-holes antigos.
+# Configuração aplicada pela API (dns-adguard/adguard-apply.py) a partir de dns-adguard/adguard-config.json.
+- name: Versão mais recente publicada
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest
+    return_content: true
+  register: adguard_agh_rel
+  run_once: true
+  delegate_to: localhost
+
+- name: Binário instalado?
+  ansible.builtin.stat:
+    path: /opt/AdGuardHome/AdGuardHome
+  register: adguard_agh_bin
+
+- name: Download com verificação de checksum
+  when: not adguard_agh_bin.stat.exists
+  block:
+    - name: Checksums da release
+      ansible.builtin.uri:
+        url: "https://github.com/AdguardTeam/AdGuardHome/releases/download/{{ adguard_agh_rel.json.tag_name }}/checksums.txt"
+        return_content: true
+      register: adguard_agh_sums
+      delegate_to: localhost
+
+    - name: Pacote
+      ansible.builtin.get_url:
+        url: "https://github.com/AdguardTeam/AdGuardHome/releases/download/{{ adguard_agh_rel.json.tag_name }}/AdGuardHome_linux_amd64.tar.gz"
+        dest: /tmp/AdGuardHome_linux_amd64.tar.gz
+        checksum: "sha256:{{ (adguard_agh_sums.content | regex_search('([0-9a-f]{64})\\s+\\./AdGuardHome_linux_amd64\\.tar\\.gz', '\\1')) | first }}"
+        mode: "0644"
+
+    - name: Extrair em /opt
+      ansible.builtin.unarchive:
+        src: /tmp/AdGuardHome_linux_amd64.tar.gz
+        dest: /opt
+        remote_src: true
+
+    - name: Systemd-resolved fora da porta 53
+      ansible.builtin.systemd_service:
+        name: systemd-resolved
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Serviço do AdGuard Home
+      ansible.builtin.command: /opt/AdGuardHome/AdGuardHome -s install
+      changed_when: true
+
+- name: Configuração inicial (assistente) com a senha do vault
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3000/control/install/configure
+    method: POST
+    body_format: json
+    body:
+      web: { ip: 0.0.0.0, port: 80 }
+      dns: { ip: 0.0.0.0, port: 53 }
+      username: admin
+      password: "{{ vault_adguard_admin_password }}"
+  register: adguard_agh_install
+  failed_when: false
+  changed_when: adguard_agh_install.status == 200
+  no_log: true
+
+- name: Script e configuração (listas, regras, upstreams, rewrites)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/dns-adguard/{{ item }}"
+    dest: "/root/{{ item }}"
+    mode: "0600"
+  loop: [adguard-apply.py, adguard-config.json]
+  when: adguard_role == 'primary'
+
+- name: Aplicar configuração no primário (a réplica recebe pelo adguardhome-sync)
+  ansible.builtin.command: python3 /root/adguard-apply.py /root/adguard-config.json
+  args:
+    stdin: "{{ vault_adguard_admin_password }}"
+  when: adguard_role == 'primary'
+  changed_when: false
+  no_log: true
+
+- name: Adguardhome-sync no primário
+  when: adguard_role == 'primary'
+  block:
+    - name: Usuário de serviço
+      ansible.builtin.user:
+        name: agsync
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+
+    - name: Pasta de configuração do sync
+      ansible.builtin.file:
+        path: /etc/adguardhome-sync
+        state: directory
+        owner: root
+        group: agsync
+        mode: "0750"
+
+    - name: Release do adguardhome-sync
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/bakito/adguardhome-sync/releases/latest
+        return_content: true
+      register: adguard_ags_rel
+      delegate_to: localhost
+
+    - name: Checksums do adguardhome-sync
+      ansible.builtin.uri:
+        url: "https://github.com/bakito/adguardhome-sync/releases/download/{{ adguard_ags_rel.json.tag_name }}/checksums.txt"
+        return_content: true
+      register: adguard_ags_sums
+      delegate_to: localhost
+
+    - name: Nome do pacote do adguardhome-sync
+      ansible.builtin.set_fact:
+        adguard_ags_pkg: "adguardhome-sync_{{ adguard_ags_rel.json.tag_name | regex_replace('^v', '') }}_linux_amd64.tar.gz"
+
+    - name: Pacote do adguardhome-sync (checksum conferido)
+      ansible.builtin.get_url:
+        url: "https://github.com/bakito/adguardhome-sync/releases/download/{{ adguard_ags_rel.json.tag_name }}/{{ adguard_ags_pkg }}"
+        dest: /tmp/adguardhome-sync.tar.gz
+        checksum: "sha256:{{ (adguard_ags_sums.content | regex_search('([0-9a-f]{64})\\s+adguardhome-sync_\\S+_linux_amd64\\.tar\\.gz', '\\1')) | first }}"
+        mode: "0644"
+
+    - name: Binário em /usr/local/bin
+      ansible.builtin.unarchive:
+        src: /tmp/adguardhome-sync.tar.gz
+        dest: /usr/local/bin
+        include: [adguardhome-sync]
+        remote_src: true
+      notify: Restart adguardhome-sync
+
+    - name: Configuração do sync (com a senha, 640)
+      ansible.builtin.template:
+        src: adguardhome-sync.yaml.j2
+        dest: /etc/adguardhome-sync/config.yaml
+        owner: root
+        group: agsync
+        mode: "0640"
+      no_log: true
+      notify: Restart adguardhome-sync
+
+    - name: Unit do sync
+      ansible.builtin.copy:
+        src: "{{ repo_root }}/ansible/files/adguard/adguardhome-sync.service"
+        dest: /etc/systemd/system/adguardhome-sync.service
+        mode: "0644"
+      notify: Restart adguardhome-sync

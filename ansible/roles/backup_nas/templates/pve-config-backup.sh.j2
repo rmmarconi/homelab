@@ -1,0 +1,16 @@
+#!/bin/sh
+# Backup da configuração do Proxmox (gerado pelo Ansible, role backup_nas).
+# /etc/pve vem do pmxcfs montado; o tar lê a visão atual, que é o que importa para restaurar.
+set -eu
+DEST={{ nas_mountpoint }}/host-config
+mountpoint -q {{ nas_mountpoint }} || { echo "NAS não montado" >&2; exit 1; }
+F="$DEST/pve-$(date +%Y%m%d-%H%M).tar.zst"
+tar --zstd -cf "$F.tmp" --warning=no-file-changed --ignore-failed-read \
+  /etc/pve /etc/network /etc/default /etc/hosts /etc/hostname /etc/apt \
+  /etc/systemd/system /etc/systemd/journald.conf.d /etc/modprobe.d /etc/tmpfiles.d \
+  /etc/vzdump.conf /etc/ssh/sshd_config /etc/cron.d /usr/local /root/.ssh/authorized_keys \
+  /var/lib/pve-cluster/config.db
+mv "$F.tmp" "$F"
+chmod 600 "$F"
+find "$DEST" -name 'pve-*.tar.zst' -mtime +30 -delete
+echo "ok: $F ($(du -h "$F" | cut -f1))"

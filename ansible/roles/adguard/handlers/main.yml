@@ -1,0 +1,6 @@
+- name: Restart adguardhome-sync
+  ansible.builtin.systemd_service:
+    name: adguardhome-sync
+    state: restarted
+    enabled: true
+    daemon_reload: true

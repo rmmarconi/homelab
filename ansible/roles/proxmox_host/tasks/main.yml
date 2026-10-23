@@ -1,0 +1,63 @@
+# Proxmox VE (nó pve). Estado de 2026-10: kernel com C-states limitados (travamentos
+# por energia), memtest no boot, offload desligado na NIC e2e1000e, logs espelhados
+# para o mediacenter, temperatura no journal.
+- name: Repositórios sem assinatura (desliga os enterprise, que falham sem licença)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/ansible/files/proxmox/etc/apt/sources.list.d/{{ item }}"
+    dest: "/etc/apt/sources.list.d/{{ item }}"
+    mode: "0644"
+  loop: [debian.sources, proxmox.sources, ceph.sources, pve-enterprise.sources]
+
+- name: /etc/hosts com o IP real do nó (havia 192.168.0.19 antigo)
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^\S+\s+pve\.local\s+pve$'
+    line: "{{ proxmox_ip }} pve.local pve"
+
+- name: Parâmetros do kernel (C-states, memtest, nomodeset)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: 'GRUB_CMDLINE_LINUX_DEFAULT="nomodeset intel_idle.max_cstate=1 processor.max_cstate=1 memtest=4"'
+  notify: Update grub
+
+- name: Offload desligado na nic0 (Intel I217 tinha "Hardware Unit Hang")
+  ansible.builtin.lineinfile:
+    path: /etc/network/interfaces
+    insertafter: '^iface nic0 inet manual'
+    regexp: 'post-up /sbin/ethtool -K nic0'
+    line: "\tpost-up /sbin/ethtool -K nic0 gso off tso off gro off lro off rx off tx off"
+
+- name: Pacotes do host
+  ansible.builtin.apt:
+    name: [lm-sensors, socat, smartmontools, nfs-common]
+    state: present
+
+- name: Journald grava a cada 10 s (não perder log em queda de energia)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/ansible/files/proxmox/etc/systemd/journald.conf.d/sync.conf"
+    dest: /etc/systemd/journald.conf.d/sync.conf
+    mode: "0644"
+  notify: Restart journald
+
+- name: Units de log remoto e temperatura
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/ansible/files/proxmox/etc/systemd/system/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    mode: "0644"
+  loop: [journal-forward.service, temp-log.service, temp-log.timer]
+  notify: Reload systemd
+
+- name: Serviços de log remoto e temperatura ativos
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    daemon_reload: true
+  loop: [journal-forward.service, temp-log.timer]
+
+- name: Turbo desligado (reduz picos de consumo; ver histórico de travamentos)
+  ansible.builtin.copy:
+    dest: /etc/tmpfiles.d/no-turbo.conf
+    content: "w /sys/devices/system/cpu/intel_pstate/no_turbo - - - - 1\n"
+    mode: "0644"

@@ -1,0 +1,5 @@
+[Unit]
+Description=Registra temperatura da CPU no journal
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo TEMP $(sensors coretemp-isa-0000 | awk \"/Package/{print \$4}\") load=$(cut -d\" \" -f1 /proc/loadavg) throttle=$(cat /sys/devices/system/cpu/cpu0/thermal_throttle/package_throttle_count)"

@@ -1,0 +1,14 @@
+[Unit]
+Description=adguardhome-sync (adguard-1 -> adguard-2)
+After=network-online.target AdGuardHome.service
+Wants=network-online.target
+[Service]
+User=agsync
+ExecStart=/usr/local/bin/adguardhome-sync run --config /etc/adguardhome-sync/config.yaml
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

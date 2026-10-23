@@ -1,0 +1,28 @@
+; Shlink (short.x7velo.com) — pool próprio, roda como usuário shlink.
+; Configuração por variáveis de ambiente (https://shlink.io/documentation/environment-variables/).
+; O comando /usr/local/bin/shlink lê as mesmas linhas env[] daqui.
+[shlink]
+user = shlink
+group = shlink
+listen = /run/php/shlink.sock
+listen.owner = www-data
+listen.group = www-data
+listen.mode = 0660
+pm = ondemand
+pm.max_children = 8
+pm.process_idle_timeout = 60s
+clear_env = yes
+
+env[DB_DRIVER] = maria
+env[DB_NAME] = shlink
+env[DB_USER] = shlink
+env[DB_PASSWORD_FILE] = /etc/shlink/db_password
+env[DB_HOST] = localhost
+env[DEFAULT_DOMAIN] = short.x7velo.com
+env[IS_HTTPS_ENABLED] = true
+env[TIMEZONE] = America/Bahia
+env[REDIRECT_STATUS_CODE] = 302
+
+php_admin_value[open_basedir] = /opt/shlink:/etc/shlink:/tmp
+php_admin_value[memory_limit] = 256M
+env[GEOLITE_LICENSE_KEY] = {{ vault_shlink_geolite_license_key }}

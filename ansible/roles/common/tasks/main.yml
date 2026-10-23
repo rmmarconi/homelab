@@ -1,0 +1,32 @@
+# Base comum a todos os Linux do homelab (Debian/Ubuntu/Proxmox/LXC).
+- name: Fuso horário
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Pacotes básicos
+  ansible.builtin.apt:
+    name: [curl, ca-certificates, jq, htop, vim-tiny, prometheus-node-exporter]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Preferir IPv4 na resolução (IPv6 de saída quebrado na rede)
+  ansible.builtin.lineinfile:
+    path: /etc/gai.conf
+    regexp: '^#?precedence ::ffff:0:0/96'
+    line: "precedence ::ffff:0:0/96  100"
+    create: true
+    mode: "0644"
+  when: prefer_ipv4 | bool
+
+- name: Diretório do textfile collector do node-exporter
+  ansible.builtin.file:
+    path: "{{ node_exporter_textfile_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Node-exporter ativo
+  ansible.builtin.service:
+    name: prometheus-node-exporter
+    state: started
+    enabled: true

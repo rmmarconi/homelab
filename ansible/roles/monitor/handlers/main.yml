@@ -1,0 +1,10 @@
+- name: Compose up
+  community.docker.docker_compose_v2:
+    project_src: /opt/monitoring
+    state: present
+
+- name: Compose recreate
+  community.docker.docker_compose_v2:
+    project_src: /opt/monitoring
+    state: present
+    recreate: always

@@ -1,0 +1,20 @@
+# Gerado pelo Ansible. adguard-1 (origem) -> adguard-2 (réplica).
+cron: "*/10 * * * *"
+runOnStart: true
+continueOnError: true
+origin:
+  url: http://127.0.0.1
+  username: admin
+  password: "{{ vault_adguard_admin_password }}"
+replicas:
+{% for h in groups['dns'] if hostvars[h].adguard_role == 'replica' %}
+  - url: http://{{ hostvars[h].adguard_ip }}
+    username: admin
+    password: "{{ vault_adguard_admin_password }}"
+{% endfor %}
+api:
+  port: 0
+features:
+  dhcp:
+    serverConfig: false
+    staticLeases: false
