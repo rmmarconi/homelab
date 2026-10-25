@@ -100,6 +100,47 @@
     mode: "0750"
   become: true
 
+- name: Perfil infantil por tag no Radarr/Sonarr (script)
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/mediacenter/arr/arr-perfil-infantil"
+    dest: /usr/local/sbin/arr-perfil-infantil
+    mode: "0750"
+  become: true
+
+- name: Perfil infantil por tag (units)
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: "0644"
+  loop:
+    - name: arr-perfil-infantil.service
+      content: |
+        [Unit]
+        Description=Perfil Infantil (dublado) para títulos com a tag infantil no Radarr/Sonarr
+        After=radarr.service sonarr.service
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/sbin/arr-perfil-infantil
+    - name: arr-perfil-infantil.timer
+      content: |
+        [Unit]
+        Description=Aplica o perfil infantil a cada 10 min
+        [Timer]
+        OnBootSec=5min
+        OnUnitActiveSec=10min
+        [Install]
+        WantedBy=timers.target
+  become: true
+
+- name: Timer do perfil infantil
+  ansible.builtin.systemd_service:
+    name: arr-perfil-infantil.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true
+  ignore_errors: "{{ ansible_check_mode }}"  # no check a unit ainda não existe
+
 # --- Backup dos dados do mediacenter direto no UNAS (máquina física, fora do vzdump) ---
 - name: Cliente SMB
   ansible.builtin.apt:

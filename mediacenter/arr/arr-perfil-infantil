@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Aplica o perfil "Infantil (dublado)" a filmes/séries com a tag "infantil" no Radarr e no Sonarr,
+e devolve ao perfil normal ("HD - 720p/1080p") quem perdeu a tag. Só troca entre esses dois
+perfis; não inicia buscas (upgrades seguem o RSS). Roda pelo arr-perfil-infantil.timer.
+"""
+import json, re, sys, urllib.request
+
+TAG = "infantil"
+PERFIL_INFANTIL = "Infantil (dublado)"
+PERFIL_NORMAL = "HD - 720p/1080p"
+APPS = (("radarr", 7878, "movie"), ("sonarr", 8989, "series"))
+
+
+def cliente(app, porta):
+    k = re.search(r"<ApiKey>([^<]+)", open(f"/var/lib/mediacenter/{app}/config.xml").read()).group(1)
+
+    def api(path, body=None, method=None):
+        r = urllib.request.Request(f"http://127.0.0.1:{porta}/api/v3/{path}",
+                                   data=json.dumps(body).encode() if body is not None else None,
+                                   headers={"X-Api-Key": k, "Content-Type": "application/json"},
+                                   method=method or ("POST" if body is not None else "GET"))
+        return json.load(urllib.request.urlopen(r, timeout=60))
+    return api
+
+
+def main():
+    erros = 0
+    for app, porta, tipo in APPS:
+        try:
+            api = cliente(app, porta)
+            tag = next((t["id"] for t in api("tag") if t["label"].lower() == TAG), None)
+            perfis = {q["name"]: q["id"] for q in api("qualityprofile")}
+            pi, pn = perfis.get(PERFIL_INFANTIL), perfis.get(PERFIL_NORMAL)
+            if tag is None or pi is None or pn is None:
+                print(f"{app}: tag ou perfis ausentes, nada a fazer"); continue
+            for item in api(tipo):
+                infantil = tag in item.get("tags", [])
+                alvo = pi if infantil else (pn if item["qualityProfileId"] == pi else None)
+                if alvo and item["qualityProfileId"] != alvo:
+                    item["qualityProfileId"] = alvo
+                    api(f"{tipo}/{item['id']}", item, "PUT")
+                    print(f"{app}: {item['title']} -> {'infantil' if alvo == pi else 'normal'}")
+        except Exception as e:  # um app fora do ar não impede o outro
+            erros += 1
+            print(f"{app}: erro {e}", file=sys.stderr)
+    sys.exit(1 if erros else 0)
+
+
+if __name__ == "__main__":
+    main()

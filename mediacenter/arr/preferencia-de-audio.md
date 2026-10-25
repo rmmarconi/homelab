@@ -19,3 +19,18 @@ continua recusado para filmes. No Sonarr não há essa trava (só dublado entra 
 Testado com `/api/v3/parse` (Coyote vs. Acme, Silicon Valley).
 Pegadinha: condições do mesmo tipo são "OU" entre as opcionais, então uma condição negada
 sozinha satisfaz o grupo — por isso as duas do nome são obrigatórias.
+
+## Títulos infantis (tag `infantil`) — 2026-10-24
+
+Perfil **Infantil (dublado)** (id 7 nos dois apps), com a pontuação invertida:
+
+| Lançamento | Perfil normal | Perfil Infantil |
+|---|---|---|
+| Só dublado | 50 | **100** (preferido) |
+| Dual áudio | 150 | 70 |
+| Só original | 100 | −30 (aceito só se não houver outro; nota mínima −100) |
+
+No Radarr o perfil infantil aceita qualquer idioma (para permitir filme só dublado).
+O `arr-perfil-infantil` (timer a cada 10 min) põe no perfil infantil tudo que tem a tag
+`infantil` e devolve ao normal quem perde a tag. Para marcar um título: Radarr/Sonarr →
+editar → Tags → `infantil` (ou já no pedido do Seerr, nas opções avançadas).
