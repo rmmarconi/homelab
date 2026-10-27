@@ -78,6 +78,11 @@ services:
     ports: ["127.0.0.1:${MINIO_PORT}:9000"]
     environment:
       MC_CONFIG_DIR: /tmp/.mc   # o healthcheck usa "mc ready local"
+  worker:
+    # O HEALTHCHECK da imagem consulta /api/health da web; o worker não serve HTTP e ficava
+    # "unhealthy" funcionando normalmente. Se o processo cair, o contêiner reinicia.
+    healthcheck:
+      disable: true
   minio-init:
     image: $MINIO_IMAGE
     environment:
