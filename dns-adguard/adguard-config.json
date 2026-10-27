@@ -115,6 +115,10 @@
   {
    "domain": "www.marconi3dlab.com.br",
    "answer": "10.1.1.100"
+  },
+  {
+   "domain": "diretorio.rafaelmarconi.com.br",
+   "answer": "10.1.1.100"
   }
  ]
 }

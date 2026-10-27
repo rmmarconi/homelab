@@ -21,13 +21,22 @@ find /var/lib/mediacenter /var/lib/jellyfin/data /opt/mediacenter/seerr/config -
   sqlite3 "$db" ".backup '$out'" 2>/dev/null || cp -p "$db" "$out"
 done
 
+# Diretório (Docker em /opt/diretorio): segredos + o dump mais recente do backup.sh dele (03:10)
+DIRETORIO=""
+if [ -d /opt/diretorio ]; then
+  DIRETORIO="/opt/diretorio/.env /opt/diretorio/app.env /opt/diretorio/compose.nginx.yml"
+  for f in $(ls -t /opt/diretorio/backups/db-*.dump 2>/dev/null | head -1) $(ls -t /opt/diretorio/backups/storage-*.tgz 2>/dev/null | head -1); do
+    DIRETORIO="$DIRETORIO $f"
+  done
+fi
+
 tar --zstd -cf "$DEST/mediacenter-$DIA.tar.zst.tmp" --warning=no-file-changed --ignore-failed-read \
   --exclude='*.db' --exclude='*.db-wal' --exclude='*.db-shm' \
   --exclude='*.sqlite3' --exclude='*.sqlite3-wal' --exclude='*.sqlite3-shm' \
   --exclude='*/MediaCover/*' --exclude='*/logs/*' --exclude='*/cache/*' --exclude='*/Backups/scheduled/*' \
   /etc/nginx /etc/letsencrypt /etc/php/8.4/fpm/pool.d /etc/shlink /etc/exportarr /etc/systemd/system \
   /etc/jellyfin /var/lib/jellyfin/plugins /var/lib/mediacenter /etc/seerr /opt/mediacenter/seerr/config /opt/shlink/data \
-  /var/www/marconi3dlab /usr/local/bin /usr/local/sbin /etc/cron.d /etc/ufw \
+  /var/www/marconi3dlab /usr/local/bin /usr/local/sbin /etc/cron.d /etc/ufw $DIRETORIO \
   -C "$T" .
 mv "$DEST/mediacenter-$DIA.tar.zst.tmp" "$DEST/mediacenter-$DIA.tar.zst"
 chmod 600 "$DEST/mediacenter-$DIA.tar.zst"
