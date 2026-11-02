@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>br.homelab.llama-server</string>
+  <key>UserName</key><string>rmmarconi</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/llama-server</string>
+    <string>-m</string><string>/Users/rmmarconi/models/Qwen3.5-4B-Q4_K_M.gguf</string>
+    <string>--alias</string><string>qwen3.5-4b</string>
+    <string>--host</string><string>0.0.0.0</string><string>--port</string><string>8081</string>
+    <string>--api-key-file</string><string>/Users/rmmarconi/.config/llm/api-key</string>
+    <string>-ngl</string><string>99</string><string>-fa</string><string>on</string>
+    <string>-ctk</string><string>q8_0</string><string>-ctv</string><string>q8_0</string>
+    <string>-c</string><string>65536</string><string>-t</string><string>4</string>
+    <string>--parallel</string><string>1</string><string>--cache-reuse</string><string>256</string>
+    <string>--jinja</string><string>--chat-template-kwargs</string><string>{"enable_thinking":false}</string><string>--metrics</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>StandardOutPath</key><string>/Users/rmmarconi/Library/Logs/llm/llama-server.log</string>
+  <key>StandardErrorPath</key><string>/Users/rmmarconi/Library/Logs/llm/llama-server.log</string>
+</dict>
+</plist>

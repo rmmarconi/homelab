@@ -36,6 +36,9 @@ scrape_configs:
       # VM do OpenClaw: sistema + textfile openclaw.prom (agentes, rotinas, execuções, tokens)
       - targets: ["10.1.1.20:9100"]
         labels: {instance: openclaw}
+      # MacBook Pro M3 dedicado a LLM (adaptador USB na VLAN de servidores)
+      - targets: ["10.1.1.30:9100"]
+        labels: {instance: macbook}
 
   # Runtime do gateway OpenClaw (plugin diagnostics-prometheus). O nginx da VM
   # injeta o token do gateway e só aceita o monitor; nenhum segredo aqui.
@@ -170,3 +173,12 @@ scrape_configs:
     static_configs:
       - targets: ["10.1.1.11:80"]
         labels: {instance: homeassistant}
+
+  # llama-server no MacBook (Qwen3.5 4B, usado pelo OpenClaw); chave da API em arquivo
+  - job_name: llama-server
+    scrape_interval: 30s
+    authorization:
+      credentials_file: /etc/prometheus/secrets/macbook_llm_key
+    static_configs:
+      - targets: ["10.1.1.30:8081"]
+        labels: {instance: macbook}
