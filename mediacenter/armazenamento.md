@@ -22,6 +22,7 @@ O conteúdo foi zerado e as configurações mantidas. Backup prévio: `/root/med
 - Sonarr e Radarr: apagados séries, filmes, episódios, arquivos, histórico, fila, blocklist e coleções. Ficaram perfis, indexadores, cliente de download, raízes e nomenclatura.
 - Bazarr: apagados séries, filmes e histórico de legendas.
 - qBittorrent: apagados os torrents (`BT_backup`).
+- Seerr: apagados títulos (`media`, `season`) e pedidos; ficaram o usuário e as configurações. O banco ativo é `/opt/mediacenter/seerr/config/db/db.sqlite3`, e não `/var/lib/mediacenter/jellyseerr` (sobra antiga). Backup em `/root/seerr-pre-reset-20261106-1218.tgz`.
 - Jellyfin: biblioteca zerada pela varredura e coleções apagadas.
 
 O Jellyfin não remove itens de uma pasta de biblioteca vazia (proteção contra disco desmontado). Para zerar, crie um arquivo qualquer na pasta, varra a biblioteca e apague o arquivo.
