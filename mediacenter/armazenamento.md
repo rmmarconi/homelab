@@ -28,3 +28,5 @@ O conteúdo foi zerado e as configurações mantidas. Backup prévio: `/root/med
 O Jellyfin não remove itens de uma pasta de biblioteca vazia (proteção contra disco desmontado). Para zerar, crie um arquivo qualquer na pasta, varra a biblioteca e apague o arquivo.
 
 O Jellyfin responde na raiz `https://media.rafaelmarconi.com.br`; `jellyfin.media…` continua como alias. O vhost está em `/etc/nginx/sites-available/mediacenter.conf`.
+
+**Tag `infantil` (2026-11-08):** o Sonarr e o Radarr apagam sozinhos as tags que nenhum item usa, e com as listas vazias a `infantil` sumiu (o Seerr ficou sem tags para escolher). Ela foi recriada (id 2) e presa a um perfil de atraso igual ao padrão (sem atraso), para não ser apagada de novo.
