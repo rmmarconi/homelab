@@ -34,3 +34,15 @@ No Radarr o perfil infantil aceita qualquer idioma (para permitir filme só dubl
 O `arr-perfil-infantil` (timer a cada 10 min) põe no perfil infantil tudo que tem a tag
 `infantil` e devolve ao normal quem perde a tag. Para marcar um título: Radarr/Sonarr →
 editar → Tags → `infantil` (ou já no pedido do Seerr, nas opções avançadas).
+
+## Ajustes de 2026-11-09
+
+Filmes infantis vinham sem dublagem. Causas e correções:
+
+- **Indexadores sem fonte brasileira.** LimeTorrents, MagnetDownload, Pirate Bay e Torrentio só trazem lançamentos internacionais: para Coco foram 144 resultados e nenhum PT-BR. O Prowlarr só tem trackers BR **privados** (BJ-Share, BrasilTracker, Locadora, CapybaraBR, ASC, Samaritano). Sem um deles, o perfil infantil não encontra dublagem.
+- **Custom Format "Áudio PT-BR (dublado)"** (id 4 nos dois apps):
+  - saiu `multi`, que costuma ser francês ou nórdico (ex.: Toy.Story.MULTI-DDB, sem português);
+  - nova condição obrigatória negada: o nome não pode citar outro idioma (hindi, latino, french, german, ita, rus…), porque "Dual Audio Hindi English" contava como dublado.
+  - Regex atual: `(?i)\b(dublado|dub|nacional|portugu[eê]s|pt[ ._-]?br|brazilian|dual[ ._-]?(audio|áudio)?)\b`.
+- **Perfil Infantil (dublado):** nota mínima de −100 para **50**. Lançamento sem dublagem é recusado e o filme fica esperando (antes entrava o original com −30). Os arquivos já baixados sem PT-BR ficam abaixo do corte e são trocados quando aparecer versão dublada.
+- **Jellyfin:** o usuário Clara prefere áudio `por` e não toca a faixa padrão. Antes, arquivos com faixa em português (ex.: Coco) tocavam em inglês.
