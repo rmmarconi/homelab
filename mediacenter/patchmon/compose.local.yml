@@ -1,0 +1,9 @@
+# Ajustes locais: porta só no loopback (o nginx faz o HTTPS) e known_hosts persistente.
+services:
+  server:
+    ports: !override
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ssh_data:/data/ssh
+volumes:
+  ssh_data:
