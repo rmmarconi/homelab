@@ -36,3 +36,9 @@ providers:
     allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards/homeassistant
+  - name: Energia
+    folder: Energia
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/energia

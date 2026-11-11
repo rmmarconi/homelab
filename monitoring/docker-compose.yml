@@ -130,6 +130,14 @@ services:
     volumes:
       - ./exporters/jellyfin/exporter.py:/app/exporter.py:ro
 
+  nut-exporter:
+    image: ghcr.io/druggeri/nut_exporter:3.2.1
+    container_name: nut-exporter
+    restart: unless-stopped
+    mem_limit: 64m
+    # Leitura anônima do upsd no pve (10.1.1.254:3493); sem usuário/senha.
+    command: ["--nut.server=10.1.1.254", "--nut.vars_enable=battery.charge,battery.voltage,battery.voltage.nominal,input.voltage,input.voltage.nominal,output.voltage,output.frequency,ups.load,ups.status,ups.temperature,ups.beeper.status"]
+
   blackbox:
     image: prom/blackbox-exporter:latest
     container_name: blackbox

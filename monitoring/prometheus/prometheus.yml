@@ -182,3 +182,12 @@ scrape_configs:
     static_configs:
       - targets: ["10.1.1.30:8081"]
         labels: {instance: macbook}
+
+  # Nobreak SMS GAM2000BiBiW ligado por serial/USB no pve (NUT, driver sms_ser)
+  - job_name: nut
+    metrics_path: /ups_metrics
+    params:
+      ups: [sms]
+    static_configs:
+      - targets: ["nut-exporter:9199"]
+        labels: {instance: pve, ups: sms}
