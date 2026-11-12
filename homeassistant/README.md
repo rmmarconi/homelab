@@ -8,7 +8,11 @@ HAOS 18.3 numa VM do Proxmox (ID 105, 2 vCPU, 4 GB, 32 GB com discard).
 | enp6s19 | Default | 10.1.0.233/24 | — |
 | enp6s20 | IoT, VLAN 2 | 10.1.2.204/24 | — |
 
-IPv6 desativado nas três (a saída IPv6 da rede está quebrada). Os três adaptadores
+IPv6: desativado na enp6s18 (primária, com a rota padrão — a saída IPv6 da rede está quebrada);
+em modo *auto* na enp6s19 (Default) e enp6s20 (IoT) desde 2026-11-12, porque o Matter/Thread
+exige IPv6 (aviso `matter.ipv6_disabled`). Hoje só há endereços link-local (fe80::), sem
+gateway IPv6. Se aparecer endereço global/gateway IPv6 nessas interfaces (RA do roteador),
+o tráfego pode sair pelo IPv6 quebrado: voltar para `link-local`/desativar ou corrigir o IPv6 da rede. Os três adaptadores
 estão habilitados em *Configurações → Sistema → Rede*, senão a descoberta (Gree,
 mDNS, SSDP) só acontece na VLAN 100.
 
