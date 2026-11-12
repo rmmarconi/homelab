@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do homelab</title>
+<link rel="icon" href="icons/proxmox.svg">
+<style>
+  :root {
+    --bg: #f4f5f7; --surface: #ffffff; --surface-2: #eef0f3; --text: #16181d; --muted: #5d6470;
+    --border: #dfe2e7; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+    --up: #1f9d55; --down: #d93a3a; --unknown: #9aa1ab; --accent: #3b6cf6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1115; --surface: #171a21; --surface-2: #1f232c; --text: #e7e9ee; --muted: #9aa1ad;
+      --border: #2a2f3a; --shadow: 0 1px 2px rgba(0,0,0,.4); --accent: #7c9cff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1115; --surface: #171a21; --surface-2: #1f232c; --text: #e7e9ee; --muted: #9aa1ad;
+    --border: #2a2f3a; --shadow: 0 1px 2px rgba(0,0,0,.4); --accent: #7c9cff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .tools { display: flex; gap: 8px; align-items: center; flex: 1 1 280px; justify-content: flex-end; }
+  input[type=search] { flex: 1 1 auto; max-width: 340px; min-width: 0; padding: 9px 12px; border-radius: 10px;
+         border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+  input[type=search]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.theme { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px;
+         padding: 8px 10px; cursor: pointer; font: inherit; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; margin: 16px 0 4px; }
+  nav a { font-size: 13px; color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 999px;
+          background: var(--surface); border: 1px solid var(--border); }
+  nav a:hover { color: var(--text); }
+  section { margin-top: 28px; scroll-margin-top: 12px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 12px;
+       display: flex; align-items: center; gap: 8px; }
+  h2 .bar { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+  h2 .n { font-weight: 400; letter-spacing: 0; text-transform: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  a.card { display: flex; flex-direction: column; text-decoration: none; color: inherit; background: var(--surface);
+           border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow);
+           transition: transform .12s ease, border-color .12s ease; }
+  a.card:hover, a.card:focus-visible { transform: translateY(-2px); border-color: var(--c); outline: none; }
+  .thumb { aspect-ratio: 16 / 8; display: grid; place-items: center; position: relative;
+           background: radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, var(--c) 28%, var(--surface)) 0%,
+                       color-mix(in srgb, var(--c) 8%, var(--surface-2)) 70%); }
+  .thumb img { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,.18)); }
+  .thumb .letter { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; font-weight: 700;
+           font-size: 24px; color: #fff; background: var(--c); }
+  .status { position: absolute; top: 10px; right: 10px; font-size: 11px; padding: 2px 8px 2px 6px; border-radius: 999px;
+            background: var(--surface); border: 1px solid var(--border); display: flex; gap: 5px; align-items: center; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); }
+  .up .dot { background: var(--up); } .down .dot { background: var(--down); }
+  .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .name { font-weight: 600; }
+  .desc { color: var(--muted); font-size: 13px; }
+  .meta { margin-top: auto; padding-top: 8px; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+  .meta .url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { color: var(--muted); margin-top: 32px; display: none; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Painel do homelab</h1>
+      <div class="sub" id="summary">carregando…</div>
+    </div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Buscar serviço ( / )" aria-label="Buscar serviço">
+      <button class="theme" id="theme" title="Alternar tema" aria-label="Alternar tema">◐</button>
+    </div>
+  </header>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+  <p class="empty" id="empty">Nenhum serviço encontrado.</p>
+  <footer>Lista em <code>services.json</code> · status verificado pelo mediacenter a cada minuto · só acessível pela LAN.</footer>
+</div>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  let status = {}, cards = [];
+
+  try { const t = localStorage.getItem('painel-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  $('#theme').onclick = () => {
+    const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const t = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem('painel-theme', t); } catch (e) {}
+  };
+
+  function short(u) { return u.replace(/^https?:\/\//, '').replace(/\/$/, ''); }
+
+  function render(data) {
+    const main = $('#main'), nav = $('#nav');
+    data.categories.forEach(cat => {
+      const sec = el('section'); sec.id = cat.id; sec.style.setProperty('--c', cat.color);
+      const h = el('h2'); h.append(el('span', 'bar'), cat.name, el('span', 'n', '· ' + cat.services.length));
+      const grid = el('div', 'grid');
+      cat.services.forEach(s => {
+        const a = el('a', 'card'); a.href = s.url; a.target = '_blank'; a.rel = 'noopener';
+        a.style.setProperty('--c', cat.color);
+        const th = el('div', 'thumb');
+        if (s.icon) { const i = el('img'); i.src = 'icons/' + s.icon; i.alt = ''; i.loading = 'lazy'; th.append(i); }
+        else th.append(el('div', 'letter', s.letter || s.name[0]));
+        const st = el('span', 'status'); st.append(el('span', 'dot'), el('span', 'lbl', '…')); th.append(st);
+        const b = el('div', 'body');
+        b.append(el('div', 'name', s.name), el('div', 'desc', s.desc));
+        const m = el('div', 'meta'); m.append(el('span', 'url', short(s.url)), el('span', '', s.host || ''));
+        b.append(m); a.append(th, b); grid.append(a);
+        cards.push({ a, st, sec, s, text: (s.name + ' ' + s.desc + ' ' + s.url + ' ' + (s.host || '') + ' ' + cat.name).toLowerCase() });
+      });
+      sec.append(h, grid); main.append(sec);
+      const l = el('a', '', cat.name); l.href = '#' + cat.id; nav.append(l);
+    });
+  }
+
+  function paint() {
+    let up = 0, down = 0;
+    cards.forEach(c => {
+      const r = status.results && status.results[c.s.url];
+      c.st.classList.remove('up', 'down');
+      const lbl = c.st.querySelector('.lbl');
+      if (!r) { lbl.textContent = '—'; c.st.title = 'sem verificação'; return; }
+      c.st.classList.add(r.up ? 'up' : 'down');
+      lbl.textContent = r.up ? 'online' : 'offline';
+      c.st.title = (r.code ? 'HTTP ' + r.code : (r.error || 'sem resposta')) + (r.ms != null ? ' · ' + r.ms + ' ms' : '');
+      r.up ? up++ : down++;
+    });
+    const when = status.checked_at ? new Date(status.checked_at * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
+    $('#summary').textContent = cards.length + ' serviços' + (when ? ' · ' + up + ' online, ' + down + ' offline · verificado às ' + when : '');
+  }
+
+  async function loadStatus() {
+    try { const r = await fetch('status.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) status = await r.json(); } catch (e) {}
+    paint();
+  }
+
+  function filter() {
+    const q = $('#q').value.trim().toLowerCase();
+    let shown = 0;
+    cards.forEach(c => { const ok = !q || c.text.includes(q); c.a.style.display = ok ? '' : 'none'; if (ok) shown++; });
+    document.querySelectorAll('section').forEach(sec => {
+      sec.style.display = cards.some(c => c.sec === sec && c.a.style.display !== 'none') ? '' : 'none';
+    });
+    $('#empty').style.display = shown ? 'none' : 'block';
+  }
+
+  $('#q').addEventListener('input', filter);
+  $('#q').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { const c = cards.find(c => c.a.style.display !== 'none'); if (c) window.open(c.s.url, '_blank', 'noopener'); }
+    if (e.key === 'Escape') { e.target.value = ''; filter(); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== $('#q')) { e.preventDefault(); $('#q').focus(); } });
+
+  fetch('services.json', { cache: 'no-store' }).then(r => r.json()).then(d => { render(d); loadStatus(); setInterval(loadStatus, 60000); })
+    .catch(() => { $('#summary').textContent = 'não foi possível carregar services.json'; });
+})();
+</script>
+</body>
+</html>

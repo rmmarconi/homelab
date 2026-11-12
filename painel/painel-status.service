@@ -1,0 +1,13 @@
+[Unit]
+Description=Painel do homelab: verifica os serviços e grava status.json
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+ExecStart=/usr/local/bin/painel-status /var/www/painel
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/www/painel/status
+PrivateTmp=yes

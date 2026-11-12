@@ -37,5 +37,6 @@ de casa com o IP interno. Mesmo certificado, nada muda nos apps:
 |---|---|
 | `media.rafaelmarconi.com.br`, `*.media.rafaelmarconi.com.br` | 10.1.1.100 |
 | `marconi3dlab.com.br`, `www.marconi3dlab.com.br` | 10.1.1.100 |
+| `diretorio…`, `patchmon…`, `painel.rafaelmarconi.com.br` | 10.1.1.100 |
 
 `short.x7velo.com` continua pela Cloudflare (proxy), de propósito.

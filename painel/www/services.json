@@ -1,0 +1,74 @@
+{
+  "categories": [
+    {
+      "id": "virtualizacao", "name": "Virtualização", "color": "#e57000",
+      "services": [
+        {"name": "Proxmox VE", "desc": "pve · VMs 102, 103, 105 e LXC 107", "url": "https://10.1.1.254:8006", "icon": "proxmox.svg", "host": "10.1.1.254"}
+      ]
+    },
+    {
+      "id": "rede", "name": "Rede e armazenamento", "color": "#1f7cf2",
+      "services": [
+        {"name": "UniFi Network", "desc": "Cloud Gateway Fiber, Wi-Fi e switches", "url": "https://10.1.0.1", "icon": "unifi.svg", "host": "10.1.0.1"},
+        {"name": "UniFi Protect", "desc": "câmeras e gravações", "url": "https://10.1.0.1/protect", "icon": "unifi-protect.png", "host": "10.1.0.1"},
+        {"name": "UNAS 2", "desc": "backups do Proxmox e do mediacenter", "url": "https://10.1.1.253", "icon": "unifi-drive.svg", "host": "10.1.1.253"}
+      ]
+    },
+    {
+      "id": "dns", "name": "DNS", "color": "#68bc71",
+      "services": [
+        {"name": "AdGuard Home 1", "desc": "DNS primário · LXC 107", "url": "http://10.1.1.3", "icon": "adguard-home.svg", "host": "10.1.1.3"},
+        {"name": "AdGuard Home 2", "desc": "réplica · LXC 108 (desligado)", "url": "http://10.1.1.4", "icon": "adguard-home.svg", "host": "10.1.1.4"}
+      ]
+    },
+    {
+      "id": "monitoramento", "name": "Monitoramento", "color": "#f46800",
+      "services": [
+        {"name": "Grafana", "desc": "dashboards do homelab", "url": "http://10.1.1.15:3000", "icon": "grafana.svg", "host": "monitor"},
+        {"name": "Prometheus", "desc": "métricas e alvos", "url": "http://10.1.1.15:9090", "icon": "prometheus.svg", "host": "monitor"},
+        {"name": "Loki", "desc": "logs (consulta pelo Explore do Grafana)", "url": "http://10.1.1.15:3000/explore", "check": "http://10.1.1.15:3100/ready", "icon": "loki.svg", "host": "monitor"},
+        {"name": "Nobreak SMS", "desc": "NUT no pve · bateria, carga e tensão", "url": "http://10.1.1.15:3000/d/nobreak-sms", "icon": "ups.svg", "host": "monitor"},
+        {"name": "PatchMon", "desc": "pacotes e atualizações dos hosts", "url": "https://patchmon.rafaelmarconi.com.br", "icon": "patchmon.svg", "host": "mediacenter"}
+      ]
+    },
+    {
+      "id": "casa", "name": "Casa", "color": "#18bcf2",
+      "services": [
+        {"name": "Home Assistant", "desc": "automação residencial · VM 105", "url": "http://10.1.1.11/", "icon": "home-assistant.svg", "host": "homeassistant"},
+        {"name": "Painel da casa", "desc": "dashboard painel-casa", "url": "http://10.1.1.11/painel-casa", "check": "http://10.1.1.11/", "icon": "home-assistant.svg", "host": "homeassistant"},
+        {"name": "Ar-condicionado", "desc": "dashboard dos Gree", "url": "http://10.1.1.11/ar-condicionado", "check": "http://10.1.1.11/", "icon": "home-assistant.svg", "host": "homeassistant"}
+      ]
+    },
+    {
+      "id": "midia", "name": "Mídia", "color": "#aa5cc3",
+      "services": [
+        {"name": "Jellyfin", "desc": "filmes, séries e música", "url": "https://media.rafaelmarconi.com.br", "icon": "jellyfin.svg", "host": "mediacenter"},
+        {"name": "Seerr", "desc": "pedidos de filmes e séries", "url": "https://requests.media.rafaelmarconi.com.br", "icon": "seerr.svg", "host": "mediacenter"},
+        {"name": "Radarr", "desc": "filmes", "url": "https://radarr.media.rafaelmarconi.com.br", "icon": "radarr.svg", "host": "mediacenter"},
+        {"name": "Sonarr", "desc": "séries", "url": "https://sonarr.media.rafaelmarconi.com.br", "icon": "sonarr.svg", "host": "mediacenter"},
+        {"name": "Lidarr", "desc": "música", "url": "https://lidarr.media.rafaelmarconi.com.br", "icon": "lidarr.svg", "host": "mediacenter"},
+        {"name": "Prowlarr", "desc": "indexadores", "url": "https://prowlarr.media.rafaelmarconi.com.br", "icon": "prowlarr.svg", "host": "mediacenter"},
+        {"name": "Bazarr", "desc": "legendas", "url": "https://bazarr.media.rafaelmarconi.com.br", "icon": "bazarr.svg", "host": "mediacenter"},
+        {"name": "qBittorrent", "desc": "downloads", "url": "https://qbittorrent.media.rafaelmarconi.com.br", "icon": "qbittorrent.svg", "host": "mediacenter"}
+      ]
+    },
+    {
+      "id": "ia", "name": "IA e automação", "color": "#e5484d",
+      "services": [
+        {"name": "OpenClaw", "desc": "Control UI dos agentes · VM 103", "url": "https://10.1.1.20/", "icon": "openclaw.svg", "host": "openclaw"},
+        {"name": "Painel Financeiro", "desc": "finanças pessoais", "url": "http://10.1.1.20:8080/", "letter": "R$", "host": "openclaw"}
+      ]
+    },
+    {
+      "id": "sites", "name": "Sites e apps", "color": "#3858e9",
+      "services": [
+        {"name": "Blog", "desc": "rafaelmarconi.com.br · Hostinger", "url": "https://rafaelmarconi.com.br", "icon": "wordpress.svg", "host": "Hostinger"},
+        {"name": "Marconi 3D Lab", "desc": "marconi3dlab.com.br", "url": "https://marconi3dlab.com.br", "icon": "wordpress.svg", "host": "mediacenter"},
+        {"name": "Diretório", "desc": "piloto · diretorio.rafaelmarconi.com.br", "url": "https://diretorio.rafaelmarconi.com.br", "letter": "D", "host": "mediacenter"},
+        {"name": "Shlink", "desc": "painel do encurtador", "url": "https://shlink.media.rafaelmarconi.com.br", "icon": "shlink.svg", "host": "mediacenter"},
+        {"name": "short.x7velo.com", "desc": "encurtador público (Cloudflare)", "url": "https://short.x7velo.com", "icon": "shlink.svg", "host": "mediacenter"},
+        {"name": "Mailpit", "desc": "e-mails do Diretório (piloto)", "url": "http://10.1.1.100:8025", "icon": "mailpit.svg", "host": "mediacenter"}
+      ]
+    }
+  ]
+}

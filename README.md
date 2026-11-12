@@ -4,6 +4,7 @@ Infraestrutura do meu homelab: um Proxmox VE em um Lenovo ThinkCentre Tiny (i7-4
 
 | Pasta | Conteúdo | Status |
 |---|---|---|
+| [`painel/`](painel/) | painel com todos os serviços: https://painel.rafaelmarconi.com.br (só LAN) | ✅ em produção |
 | [`monitoring/`](monitoring/) | Prometheus, Grafana, Loki, Vector, UnPoller, GoFlow2 e exporters de Proxmox/AdGuard em Docker Compose | ✅ em produção |
 | `ansible/` | configuração dos hosts e deploy da stack | 🚧 próximo passo |
 | `terraform/` | criação das VMs/LXC no Proxmox | 🚧 próximo passo |
