@@ -136,11 +136,11 @@ services:
     restart: unless-stopped
     mem_limit: 64m
     command: ["python3", "-u", "/app/exporter.py"]
-    # 3 microinversores Deye (4 placas cada) na casa dos pais, via VPN.
+    # 3 microinversores Deye (4 placas cada) em Cosme de Farias (casa dos pais), via VPN.
     # Protocolo Solarman V5 na porta 8899: só precisa do serial do logger (não é segredo).
     environment:
       SOLARMAN_TARGETS: "micro1=10.2.0.251:3926222475,micro2=10.2.0.190:3926982436,micro3=10.2.0.186:3926442305"
-      SITE: "pais"
+      SITE: "cosme-de-farias"
       PORT: "9595"
     volumes:
       - ./exporters/solarman/exporter.py:/app/exporter.py:ro

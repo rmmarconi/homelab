@@ -127,6 +127,14 @@
   {
    "domain": "painel.rafaelmarconi.com.br",
    "answer": "10.1.1.100"
+  },
+  {
+   "domain": "homelab.rafaelmarconi.com.br",
+   "answer": "10.1.1.100"
+  },
+  {
+   "domain": "*.homelab.rafaelmarconi.com.br",
+   "answer": "10.1.1.100"
   }
  ]
 }

@@ -33,3 +33,5 @@ Nenhum segredo é versionado: cada pasta tem um `.env.example` e o `.gitignore` 
 ## Licença
 
 GPL-3.0 — veja [LICENSE](LICENSE).
+
+- [`proxy-homelab/`](proxy-homelab/) — `*.homelab.rafaelmarconi.com.br`: nomes com HTTPS para os serviços acessados por IP.

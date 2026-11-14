@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera o dashboard "Solar - Casa dos pais" (energia/solar-pais.json).
+"""Gera o dashboard "Solar - Cosme de Farias" (energia/solar-cosme-de-farias.json).
 
 Fonte: exporters/solarman (3 microinversores Deye, 4 placas cada) via job
 "solarman". À noite os micros desligam e as séries somem; por isso os
@@ -11,8 +11,8 @@ import json
 import os
 
 P = {"type": "prometheus", "uid": "prometheus"}
-S = 'site="pais",inverter=~"$inverter"'
-OUT = "grafana/dashboards/energia/solar-pais.json"
+S = 'site="cosme-de-farias",inverter=~"$inverter"'
+OUT = "grafana/dashboards/energia/solar-cosme-de-farias.json"
 YELLOW, GREEN, BLUE, ORANGE = "#FADE2A", "#73BF69", "#5794F2", "#FF9830"
 PLACA = "{{inverter}} · placa {{pv}}"
 
@@ -192,13 +192,13 @@ def board():
              legend_right=True))
 
     return {
-        "title": "Solar - Casa dos pais", "uid": "solar-pais", "tags": ["energia", "solar"],
+        "title": "Solar - Cosme de Farias", "uid": "solar-cosme-de-farias", "tags": ["energia", "solar"],
         "timezone": "browser", "refresh": "1m", "schemaVersion": 39, "editable": True,
         "time": {"from": "now/d", "to": "now/d"},
         "templating": {"list": [{
             "name": "inverter", "label": "Micro", "type": "query", "datasource": P,
-            "query": {"query": 'label_values(solar_info{site="pais"}, inverter)', "refId": "v"},
-            "definition": 'label_values(solar_info{site="pais"}, inverter)',
+            "query": {"query": 'label_values(solar_info{site="cosme-de-farias"}, inverter)', "refId": "v"},
+            "definition": 'label_values(solar_info{site="cosme-de-farias"}, inverter)',
             "refresh": 2, "multi": True, "includeAll": True, "allValue": ".*",
             "current": {"text": ["All"], "value": ["$__all"]}}]},
         "panels": b.panels,

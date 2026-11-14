@@ -1,6 +1,6 @@
 {
- "title": "Solar - Casa dos pais",
- "uid": "solar-pais",
+ "title": "Solar - Cosme de Farias",
+ "uid": "solar-cosme-de-farias",
  "tags": [
   "energia",
   "solar"
@@ -24,10 +24,10 @@
      "uid": "prometheus"
     },
     "query": {
-     "query": "label_values(solar_info{site=\"pais\"}, inverter)",
+     "query": "label_values(solar_info{site=\"cosme-de-farias\"}, inverter)",
      "refId": "v"
     },
-    "definition": "label_values(solar_info{site=\"pais\"}, inverter)",
+    "definition": "label_values(solar_info{site=\"cosme-de-farias\"}, inverter)",
     "refresh": 2,
     "multi": true,
     "includeAll": true,
@@ -70,7 +70,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(solar_ac_power_watts{site=\"pais\",inverter=~\"$inverter\"}) or vector(0)",
+     "expr": "sum(solar_ac_power_watts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}) or vector(0)",
      "refId": "A",
      "instant": true
     }
@@ -120,7 +120,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(last_over_time(solar_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h]))",
+     "expr": "sum(last_over_time(solar_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[18h]))",
      "refId": "A",
      "instant": true
     }
@@ -169,7 +169,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(max_over_time(solar_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[$__range]) - min_over_time(solar_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[$__range]))",
+     "expr": "sum(max_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[$__range]) - min_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[$__range]))",
      "refId": "A",
      "instant": true
     }
@@ -219,7 +219,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(last_over_time(solar_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[7d]))",
+     "expr": "sum(last_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[7d]))",
      "refId": "A",
      "instant": true
     }
@@ -268,7 +268,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "sum(max_over_time(solarman_up{site=\"pais\",inverter=~\"$inverter\"}[5m])) or vector(0)",
+     "expr": "sum(max_over_time(solarman_up{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[5m])) or vector(0)",
      "refId": "A",
      "instant": true
     }
@@ -318,7 +318,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max(last_over_time(solar_temperature_celsius{site=\"pais\",inverter=~\"$inverter\"}[15m]))",
+     "expr": "max(last_over_time(solar_temperature_celsius{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[15m]))",
      "refId": "A",
      "instant": true
     }
@@ -396,7 +396,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_power_watts{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "expr": "last_over_time(solar_pv_power_watts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[15m])",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}",
      "instant": true,
@@ -464,7 +464,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_power_watts{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "expr": "last_over_time(solar_pv_power_watts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[15m])",
      "refId": "A",
      "instant": true,
      "format": "table"
@@ -474,7 +474,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_voltage_volts{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "expr": "last_over_time(solar_pv_voltage_volts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[15m])",
      "refId": "B",
      "instant": true,
      "format": "table"
@@ -484,7 +484,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_current_amperes{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "expr": "last_over_time(solar_pv_current_amperes{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[15m])",
      "refId": "C",
      "instant": true,
      "format": "table"
@@ -494,7 +494,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h])",
+     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[18h])",
      "refId": "D",
      "instant": true,
      "format": "table"
@@ -504,7 +504,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[7d])",
+     "expr": "last_over_time(solar_pv_energy_total_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[7d])",
      "refId": "E",
      "instant": true,
      "format": "table"
@@ -690,7 +690,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h])",
+     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[18h])",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}",
      "instant": true,
@@ -756,7 +756,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h]) / on() group_left() avg(last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h]))",
+     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[18h]) / on() group_left() avg(last_over_time(solar_pv_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[18h]))",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}",
      "instant": true,
@@ -841,7 +841,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_pv_power_watts{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_pv_power_watts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}"
     }
@@ -896,7 +896,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_pv_voltage_volts{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_pv_voltage_volts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}"
     }
@@ -951,7 +951,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_pv_current_amperes{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_pv_current_amperes{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}"
     }
@@ -1019,7 +1019,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_ac_power_watts{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_ac_power_watts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}}"
     }
@@ -1077,7 +1077,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "last_over_time(solar_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h])",
+     "expr": "last_over_time(solar_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[18h])",
      "refId": "A",
      "legendFormat": "{{inverter}}",
      "instant": true,
@@ -1143,7 +1143,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_temperature_celsius{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_temperature_celsius{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}}"
     }
@@ -1198,7 +1198,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_grid_voltage_volts{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_grid_voltage_volts{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}}"
     }
@@ -1254,7 +1254,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solar_grid_frequency_hertz{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solar_grid_frequency_hertz{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}}"
     }
@@ -1323,7 +1323,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max_over_time(solar_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[1d:5m])",
+     "expr": "max_over_time(solar_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[1d:5m])",
      "refId": "A",
      "legendFormat": "{{inverter}}"
     }
@@ -1384,7 +1384,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "max_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[1d:5m])",
+     "expr": "max_over_time(solar_pv_energy_today_kwh{site=\"cosme-de-farias\",inverter=~\"$inverter\"}[1d:5m])",
      "refId": "A",
      "legendFormat": "{{inverter}} · placa {{pv}}"
     }
@@ -1441,7 +1441,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "solarman_up{site=\"pais\",inverter=~\"$inverter\"}",
+     "expr": "solarman_up{site=\"cosme-de-farias\",inverter=~\"$inverter\"}",
      "refId": "A",
      "legendFormat": "{{inverter}}"
     }

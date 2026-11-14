@@ -3,40 +3,41 @@
     {
       "id": "virtualizacao", "name": "Virtualização", "color": "#e57000",
       "services": [
-        {"name": "Proxmox VE", "desc": "pve · VMs 102, 103, 105 e LXC 107", "url": "https://10.1.1.254:8006", "icon": "proxmox.svg", "host": "10.1.1.254"}
+        {"name": "Proxmox VE", "desc": "pve · VMs 102, 103, 105 e LXC 107", "url": "https://proxmox.homelab.rafaelmarconi.com.br", "icon": "proxmox.svg", "host": "10.1.1.254"}
       ]
     },
     {
       "id": "rede", "name": "Rede e armazenamento", "color": "#1f7cf2",
       "services": [
-        {"name": "UniFi Network", "desc": "Cloud Gateway Fiber, Wi-Fi e switches", "url": "https://10.1.0.1", "icon": "unifi.svg", "host": "10.1.0.1"},
-        {"name": "UniFi Protect", "desc": "câmeras e gravações", "url": "https://10.1.0.1/protect", "icon": "unifi-protect.png", "host": "10.1.0.1"},
-        {"name": "UNAS 2", "desc": "backups do Proxmox e do mediacenter", "url": "https://10.1.1.253", "icon": "unifi-drive.svg", "host": "10.1.1.253"}
+        {"name": "UniFi Network", "desc": "Cloud Gateway Fiber, Wi-Fi e switches", "url": "https://unifi.homelab.rafaelmarconi.com.br", "icon": "unifi.svg", "host": "10.1.0.1"},
+        {"name": "UniFi Protect", "desc": "câmeras e gravações", "url": "https://unifi.homelab.rafaelmarconi.com.br/protect", "icon": "unifi-protect.png", "host": "10.1.0.1"},
+        {"name": "UNAS 2", "desc": "backups do Proxmox e do mediacenter", "url": "https://unas.homelab.rafaelmarconi.com.br", "icon": "unifi-drive.svg", "host": "10.1.1.253"}
       ]
     },
     {
       "id": "dns", "name": "DNS", "color": "#68bc71",
       "services": [
-        {"name": "AdGuard Home 1", "desc": "DNS primário · LXC 107", "url": "http://10.1.1.3", "icon": "adguard-home.svg", "host": "10.1.1.3"},
-        {"name": "AdGuard Home 2", "desc": "réplica · LXC 108 (desligado)", "url": "http://10.1.1.4", "icon": "adguard-home.svg", "host": "10.1.1.4"}
+        {"name": "AdGuard Home 1", "desc": "DNS primário · LXC 107", "url": "https://adguard.homelab.rafaelmarconi.com.br", "icon": "adguard-home.svg", "host": "10.1.1.3"},
+        {"name": "AdGuard Home 2", "desc": "réplica · LXC 108 (desligado)", "url": "https://adguard2.homelab.rafaelmarconi.com.br", "icon": "adguard-home.svg", "host": "10.1.1.4"}
       ]
     },
     {
       "id": "monitoramento", "name": "Monitoramento", "color": "#f46800",
       "services": [
-        {"name": "Grafana", "desc": "dashboards do homelab", "url": "http://10.1.1.15:3000", "icon": "grafana.svg", "host": "monitor"},
-        {"name": "Prometheus", "desc": "métricas e alvos", "url": "http://10.1.1.15:9090", "icon": "prometheus.svg", "host": "monitor"},
-        {"name": "Loki", "desc": "logs (consulta pelo Explore do Grafana)", "url": "http://10.1.1.15:3000/explore", "check": "http://10.1.1.15:3100/ready", "icon": "loki.svg", "host": "monitor"},
-        {"name": "Nobreak SMS", "desc": "NUT no pve · bateria, carga e tensão", "url": "http://10.1.1.15:3000/d/nobreak-sms", "icon": "ups.svg", "host": "monitor"},
+        {"name": "Grafana", "desc": "dashboards do homelab", "url": "https://grafana.homelab.rafaelmarconi.com.br", "icon": "grafana.svg", "host": "monitor"},
+        {"name": "Prometheus", "desc": "métricas e alvos", "url": "https://prometheus.homelab.rafaelmarconi.com.br", "icon": "prometheus.svg", "host": "monitor"},
+        {"name": "Loki", "desc": "logs (consulta pelo Explore do Grafana)", "url": "https://grafana.homelab.rafaelmarconi.com.br/explore", "check": "http://10.1.1.15:3100/ready", "icon": "loki.svg", "host": "monitor"},
+        {"name": "Nobreak SMS", "desc": "NUT no pve · bateria, carga e tensão", "url": "https://grafana.homelab.rafaelmarconi.com.br/d/nobreak-sms", "icon": "ups.svg", "host": "monitor"},
+        {"name": "Solar · Cosme de Farias", "desc": "3 micros Deye, 12 placas · geração por placa", "url": "https://grafana.homelab.rafaelmarconi.com.br/d/solar-cosme-de-farias", "icon": "grafana.svg", "host": "monitor"},
         {"name": "PatchMon", "desc": "pacotes e atualizações dos hosts", "url": "https://patchmon.rafaelmarconi.com.br", "icon": "patchmon.svg", "host": "mediacenter"}
       ]
     },
     {
       "id": "casa", "name": "Casa", "color": "#18bcf2",
       "services": [
-        {"name": "Home Assistant", "desc": "automação residencial · VM 105", "url": "http://10.1.1.11/", "icon": "home-assistant.svg", "host": "homeassistant"},
-        {"name": "Painel da casa", "desc": "dashboard painel-casa", "url": "http://10.1.1.11/painel-casa", "check": "http://10.1.1.11/", "icon": "home-assistant.svg", "host": "homeassistant"},
-        {"name": "Ar-condicionado", "desc": "dashboard dos Gree", "url": "http://10.1.1.11/ar-condicionado", "check": "http://10.1.1.11/", "icon": "home-assistant.svg", "host": "homeassistant"}
+        {"name": "Home Assistant", "desc": "automação residencial · VM 105", "url": "https://ha.homelab.rafaelmarconi.com.br/", "icon": "home-assistant.svg", "host": "homeassistant"},
+        {"name": "Painel da casa", "desc": "dashboard painel-casa", "url": "https://ha.homelab.rafaelmarconi.com.br/painel-casa", "check": "https://ha.homelab.rafaelmarconi.com.br/", "icon": "home-assistant.svg", "host": "homeassistant"},
+        {"name": "Ar-condicionado", "desc": "dashboard dos Gree", "url": "https://ha.homelab.rafaelmarconi.com.br/ar-condicionado", "check": "https://ha.homelab.rafaelmarconi.com.br/", "icon": "home-assistant.svg", "host": "homeassistant"}
       ]
     },
     {
@@ -55,8 +56,8 @@
     {
       "id": "ia", "name": "IA e automação", "color": "#e5484d",
       "services": [
-        {"name": "OpenClaw", "desc": "Control UI dos agentes · VM 103", "url": "https://10.1.1.20/", "icon": "openclaw.svg", "host": "openclaw"},
-        {"name": "Painel Financeiro", "desc": "finanças pessoais", "url": "http://10.1.1.20:8080/", "letter": "R$", "host": "openclaw"}
+        {"name": "OpenClaw", "desc": "Control UI dos agentes · VM 103", "url": "https://openclaw.homelab.rafaelmarconi.com.br/", "icon": "openclaw.svg", "host": "openclaw"},
+        {"name": "Painel Financeiro", "desc": "finanças pessoais", "url": "https://financas.homelab.rafaelmarconi.com.br/", "letter": "R$", "host": "openclaw"}
       ]
     },
     {
@@ -67,7 +68,7 @@
         {"name": "Diretório", "desc": "piloto · diretorio.rafaelmarconi.com.br", "url": "https://diretorio.rafaelmarconi.com.br", "letter": "D", "host": "mediacenter"},
         {"name": "Shlink", "desc": "painel do encurtador", "url": "https://shlink.media.rafaelmarconi.com.br", "icon": "shlink.svg", "host": "mediacenter"},
         {"name": "short.x7velo.com", "desc": "encurtador público (Cloudflare)", "url": "https://short.x7velo.com", "icon": "shlink.svg", "host": "mediacenter"},
-        {"name": "Mailpit", "desc": "e-mails do Diretório (piloto)", "url": "http://10.1.1.100:8025", "icon": "mailpit.svg", "host": "mediacenter"}
+        {"name": "Mailpit", "desc": "e-mails do Diretório (piloto)", "url": "https://mailpit.homelab.rafaelmarconi.com.br", "icon": "mailpit.svg", "host": "mediacenter"}
       ]
     }
   ]

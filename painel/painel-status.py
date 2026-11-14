@@ -26,7 +26,9 @@ def check(s):
 svcs = [s for c in json.load(open(os.path.join(ROOT, "services.json")))["categories"] for s in c["services"]]
 # O próprio mediacenter não usa os rewrites do AdGuard: os domínios servidos pelo nginx daqui
 # resolveriam para o IP público (sem NAT loopback). Para eles, conecta em 127.0.0.1 (SNI mantido).
-LOCAL = {urllib.parse.urlsplit(s.get("check", s["url"])).hostname for s in svcs if s.get("host") == "mediacenter"} - {"10.1.1.100"}
+HOMELAB = "homelab.rafaelmarconi.com.br"  # proxy reverso no próprio mediacenter
+_hosts = {urllib.parse.urlsplit(s.get("check", s["url"])).hostname: s for s in svcs}
+LOCAL = {h for h, s in _hosts.items() if s.get("host") == "mediacenter" or h == HOMELAB or h.endswith("." + HOMELAB)} - {"10.1.1.100"}
 _gai = socket.getaddrinfo
 socket.getaddrinfo = lambda h, *a, **k: _gai("127.0.0.1" if h in LOCAL else h, *a, **k)
 

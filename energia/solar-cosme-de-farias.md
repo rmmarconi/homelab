@@ -1,4 +1,4 @@
-# Solar — casa dos pais
+# Solar — Cosme de Farias (casa dos pais)
 
 3 microinversores Deye de 2 kW (4 placas cada, 12 placas), com logger Wi-Fi
 Solarman embutido, acessíveis pela VPN site-to-site:
@@ -35,12 +35,13 @@ Métricas: `solar_pv_{voltage_volts,current_amperes,power_watts,energy_today_kwh
 
 ## Dashboard
 
-Grafana › Energia › **Solar - Casa dos pais** (`/d/solar-pais`), gerado por
+Grafana › Energia › **Solar - Cosme de Farias** (`https://grafana.homelab.rafaelmarconi.com.br/d/solar-cosme-de-farias`), gerado por
 `monitoring/scripts/gen-solar-dashboard.py`: potência e geração agora, por placa
 (potência, tensão, corrente, gerado hoje, desempenho relativo à média), por micro
 (potência CA, temperatura, tensão e frequência da rede) e histórico diário.
 
-## Pendência: rota da VPN
+## Acesso pela VPN
 
-A VPN só encaminha a rede 10.1.0.0/24; o monitor (10.1.1.15) não alcança 10.2.0.0/24.
-É preciso incluir 10.1.1.0/24 nas redes da VPN site-to-site no UniFi (dos dois lados).
+A rede SERVERS (10.1.1.0/24) é a zona **DMZ** do UniFi Flamingos Paradise; a política
+"Allow Traffic" DMZ → VPN libera o monitor até 10.2.0.0/24. Do lado de Cosme de Farias,
+VPN → Internal já é permitido por padrão. Rótulo das métricas: `site="cosme-de-farias"`.

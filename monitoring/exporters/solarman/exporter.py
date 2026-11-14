@@ -9,7 +9,7 @@ exige o número de série do logger, que se descobre com
 Variáveis de ambiente:
   SOLARMAN_TARGETS  lista "nome=ip:serial" separada por vírgula
                     ex.: micro1=10.2.0.251:3926222475,micro2=10.2.0.190:3926982436
-  SITE              rótulo do local (padrão: pais)
+  SITE              rótulo do local (padrão: cosme-de-farias)
   PORT              porta do /metrics (padrão 9595)
 
 À noite o micro desliga junto com o logger: solarman_up fica 0 e as demais
@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PORT = int(os.environ.get("PORT", "9595"))
-SITE = os.environ.get("SITE", "pais")
+SITE = os.environ.get("SITE", "cosme-de-farias")
 TIMEOUT = float(os.environ.get("SOLARMAN_TIMEOUT", "5"))
 
 
