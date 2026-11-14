@@ -17,3 +17,4 @@ monitoring/grafana/dashboards/**/[0-9]*.json
 
 # tokens lidos pelo Prometheus
 monitoring/secrets/
+__pycache__/
