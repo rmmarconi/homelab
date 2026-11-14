@@ -191,3 +191,11 @@ scrape_configs:
     static_configs:
       - targets: ["nut-exporter:9199"]
         labels: {instance: pve, ups: sms}
+
+  # Microinversores da casa dos pais (Solarman V5 via VPN). Leitura lenta: ~10 s.
+  - job_name: solarman
+    scrape_interval: 60s
+    scrape_timeout: 45s
+    static_configs:
+      - targets: ["solarman-exporter:9595"]
+        labels: {instance: pais}

@@ -1,0 +1,1487 @@
+{
+ "title": "Solar - Casa dos pais",
+ "uid": "solar-pais",
+ "tags": [
+  "energia",
+  "solar"
+ ],
+ "timezone": "browser",
+ "refresh": "1m",
+ "schemaVersion": 39,
+ "editable": true,
+ "time": {
+  "from": "now/d",
+  "to": "now/d"
+ },
+ "templating": {
+  "list": [
+   {
+    "name": "inverter",
+    "label": "Micro",
+    "type": "query",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "prometheus"
+    },
+    "query": {
+     "query": "label_values(solar_info{site=\"pais\"}, inverter)",
+     "refId": "v"
+    },
+    "definition": "label_values(solar_info{site=\"pais\"}, inverter)",
+    "refresh": 2,
+    "multi": true,
+    "includeAll": true,
+    "allValue": ".*",
+    "current": {
+     "text": [
+      "All"
+     ],
+     "value": [
+      "$__all"
+     ]
+    }
+   }
+  ]
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "Agora",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Potência agora",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(solar_ac_power_watts{site=\"pais\",inverter=~\"$inverter\"}) or vector(0)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FADE2A"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Potência CA somada dos micros. Zero à noite (micros desligados).",
+   "id": 2
+  },
+  {
+   "type": "stat",
+   "title": "Gerado hoje",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(last_over_time(solar_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FADE2A"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 3
+  },
+  {
+   "type": "stat",
+   "title": "Gerado no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(max_over_time(solar_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[$__range]) - min_over_time(solar_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FF9830"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Diferença do contador total no intervalo escolhido no topo do dashboard.",
+   "id": 4
+  },
+  {
+   "type": "stat",
+   "title": "Total desde a instalação",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(last_over_time(solar_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[7d]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#73BF69"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 5
+  },
+  {
+   "type": "stat",
+   "title": "Micros online",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(max_over_time(solarman_up{site=\"pais\",inverter=~\"$inverter\"}[5m])) or vector(0)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#5794F2"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "À noite os três ficam offline (o logger desliga junto com o micro).",
+   "id": 6
+  },
+  {
+   "type": "stat",
+   "title": "Temperatura máx.",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max(last_over_time(solar_temperature_celsius{site=\"pais\",inverter=~\"$inverter\"}[15m]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 1
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 60
+       },
+       {
+        "color": "red",
+        "value": 75
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 7
+  },
+  {
+   "id": 8,
+   "type": "row",
+   "title": "Por placa",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 5
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Potência por placa agora",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_power_watts{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}",
+     "instant": true,
+     "format": "time_series"
+    }
+   ],
+   "gridPos": {
+    "h": 13,
+    "w": 12,
+    "x": 0,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "decimals": 0,
+     "min": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "continuous-YlRd"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "namePlacement": "left",
+    "sizing": "auto",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   },
+   "transformations": [
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Field",
+        "desc": false
+       }
+      ]
+     }
+    }
+   ],
+   "description": "Potência CC de cada placa. Placa bem abaixo das vizinhas = sombra, sujeira ou defeito.",
+   "id": 9
+  },
+  {
+   "type": "table",
+   "title": "Placas agora",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "description": "Último valor de cada placa (CC, antes do micro). Potência = tensão × corrente.",
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_power_watts{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "refId": "A",
+     "instant": true,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_voltage_volts{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "refId": "B",
+     "instant": true,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_current_amperes{site=\"pais\",inverter=~\"$inverter\"}[15m])",
+     "refId": "C",
+     "instant": true,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h])",
+     "refId": "D",
+     "instant": true,
+     "format": "table"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_energy_total_kwh{site=\"pais\",inverter=~\"$inverter\"}[7d])",
+     "refId": "E",
+     "instant": true,
+     "format": "table"
+    }
+   ],
+   "gridPos": {
+    "h": 13,
+    "w": 12,
+    "x": 12,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "align": "center"
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Potência (W)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "watt"
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "gradient"
+        }
+       },
+       {
+        "id": "max",
+        "value": 550
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "continuous-YlRd"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Hoje (kWh)"
+      },
+      "properties": [
+       {
+        "id": "decimals",
+        "value": 1
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "lcd"
+        }
+       },
+       {
+        "id": "color",
+        "value": {
+         "mode": "continuous-GrYlRd"
+        }
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Tensão (V)"
+      },
+      "properties": [
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Corrente (A)"
+      },
+      "properties": [
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Total (kWh)"
+      },
+      "properties": [
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "sortBy": [
+     {
+      "displayName": "Micro"
+     }
+    ]
+   },
+   "transformations": [
+    {
+     "id": "merge"
+    },
+    {
+     "id": "organize",
+     "options": {
+      "excludeByName": {
+       "Time": true,
+       "job": true,
+       "instance": true,
+       "site": true,
+       "__name__": true
+      },
+      "indexByName": {
+       "inverter": 0,
+       "pv": 1,
+       "Value #A": 2,
+       "Value #B": 3,
+       "Value #C": 4,
+       "Value #D": 5,
+       "Value #E": 6
+      },
+      "renameByName": {
+       "Value #A": "Potência (W)",
+       "Value #B": "Tensão (V)",
+       "Value #C": "Corrente (A)",
+       "Value #D": "Hoje (kWh)",
+       "Value #E": "Total (kWh)",
+       "inverter": "Micro",
+       "pv": "Placa"
+      }
+     }
+    },
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Micro"
+       },
+       {
+        "field": "Placa"
+       }
+      ]
+     }
+    }
+   ],
+   "id": 10
+  },
+  {
+   "type": "bargauge",
+   "title": "Gerado hoje por placa",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h])",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}",
+     "instant": true,
+     "format": "time_series"
+    }
+   ],
+   "gridPos": {
+    "h": 13,
+    "w": 12,
+    "x": 0,
+    "y": 19
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "min": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "continuous-YlRd"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "namePlacement": "left",
+    "sizing": "auto",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   },
+   "transformations": [
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Field",
+        "desc": false
+       }
+      ]
+     }
+    }
+   ],
+   "id": 11
+  },
+  {
+   "type": "bargauge",
+   "title": "Desempenho relativo hoje (placa ÷ média das placas)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h]) / on() group_left() avg(last_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h]))",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}",
+     "instant": true,
+     "format": "time_series"
+    }
+   ],
+   "gridPos": {
+    "h": 13,
+    "w": 12,
+    "x": 12,
+    "y": 19
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "decimals": 0,
+     "min": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 0.85
+       },
+       {
+        "color": "#73BF69",
+        "value": 0.95
+       }
+      ]
+     },
+     "max": 1.2
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "namePlacement": "left",
+    "sizing": "auto",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   },
+   "transformations": [
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Field",
+        "desc": false
+       }
+      ]
+     }
+    }
+   ],
+   "description": "100% = média. Abaixo de ~85% de forma persistente merece uma olhada (limpeza, sombra, conector).",
+   "id": 12
+  },
+  {
+   "type": "timeseries",
+   "title": "Potência por placa",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_pv_power_watts{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}"
+    }
+   ],
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 32
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 13
+  },
+  {
+   "type": "timeseries",
+   "title": "Tensão por placa",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_pv_voltage_volts{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 0,
+    "y": 42
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 14
+  },
+  {
+   "type": "timeseries",
+   "title": "Corrente por placa",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_pv_current_amperes{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 12,
+    "y": 42
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "amp",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 15
+  },
+  {
+   "id": 16,
+   "type": "row",
+   "title": "Por microinversor",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 51
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Potência CA por micro (empilhado)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_ac_power_watts{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}}"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 16,
+    "x": 0,
+    "y": 52
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "normal"
+      }
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 17
+  },
+  {
+   "type": "bargauge",
+   "title": "Gerado hoje por micro",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "last_over_time(solar_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[18h])",
+     "refId": "A",
+     "legendFormat": "{{inverter}}",
+     "instant": true,
+     "format": "time_series"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 8,
+    "x": 16,
+    "y": 52
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "min": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "continuous-YlRd"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient",
+    "showUnfilled": true,
+    "valueMode": "color",
+    "namePlacement": "left",
+    "sizing": "auto",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    }
+   },
+   "transformations": [
+    {
+     "id": "sortBy",
+     "options": {
+      "sort": [
+       {
+        "field": "Field",
+        "desc": false
+       }
+      ]
+     }
+    }
+   ],
+   "id": 18
+  },
+  {
+   "type": "timeseries",
+   "title": "Temperatura dos micros",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_temperature_celsius{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 0,
+    "y": 61
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 19
+  },
+  {
+   "type": "timeseries",
+   "title": "Tensão da rede",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_grid_voltage_volts{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 8,
+    "y": 61
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "min",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 20
+  },
+  {
+   "type": "timeseries",
+   "title": "Frequência da rede",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solar_grid_frequency_hertz{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 61
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "hertz",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 2
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "min",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 21
+  },
+  {
+   "id": 22,
+   "type": "row",
+   "title": "Histórico diário",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 69
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Geração por dia (micros)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max_over_time(solar_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[1d:5m])",
+     "refId": "A",
+     "legendFormat": "{{inverter}}"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 0,
+    "y": 70
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "custom": {
+      "fillOpacity": 80,
+      "lineWidth": 1,
+      "spanNulls": false,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "normal"
+      },
+      "drawStyle": "bars"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "sum"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "interval": "1d",
+   "id": 23
+  },
+  {
+   "type": "timeseries",
+   "title": "Geração por dia (placas)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "max_over_time(solar_pv_energy_today_kwh{site=\"pais\",inverter=~\"$inverter\"}[1d:5m])",
+     "refId": "A",
+     "legendFormat": "{{inverter}} · placa {{pv}}"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 12,
+    "x": 12,
+    "y": 70
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "custom": {
+      "fillOpacity": 80,
+      "lineWidth": 1,
+      "spanNulls": false,
+      "showPoints": "never",
+      "drawStyle": "bars"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "mean",
+      "sum"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "interval": "1d",
+   "id": 24
+  },
+  {
+   "type": "timeseries",
+   "title": "Disponibilidade dos loggers",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "solarman_up{site=\"pais\",inverter=~\"$inverter\"}",
+     "refId": "A",
+     "legendFormat": "{{inverter}}"
+    }
+   ],
+   "gridPos": {
+    "h": 6,
+    "w": 24,
+    "x": 0,
+    "y": 79
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "mean"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "description": "1 = respondeu à leitura Modbus. Fica 0 à noite e quando a VPN cai.",
+   "id": 25
+  }
+ ]
+}
