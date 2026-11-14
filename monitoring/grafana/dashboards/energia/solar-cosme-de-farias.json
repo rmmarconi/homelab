@@ -7,6 +7,7 @@
  ],
  "timezone": "browser",
  "refresh": "1m",
+ "description": "Microinversores Deye (geração por placa) e medidores Tuya da casa e da concessionária",
  "schemaVersion": 39,
  "editable": true,
  "time": {
@@ -373,7 +374,7 @@
   {
    "id": 8,
    "type": "row",
-   "title": "Por placa",
+   "title": "Casa e rede (medidores Tuya)",
    "collapsed": false,
    "panels": [],
    "gridPos": {
@@ -381,6 +382,874 @@
     "w": 24,
     "x": 0,
     "y": 5
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Consumo da casa agora",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity=\"sensor.monitor_de_carga_cosme_de_farias_total_active_power\"}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#5794F2"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Monitor de carga (soma das fases A e B).",
+   "id": 9
+  },
+  {
+   "type": "stat",
+   "title": "Rede agora (+ compra / − injeta)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "(sum(rate(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_consumida\"}[10m])) * 3600000) - (sum(rate(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_produzida\"}[10m])) * 3600000)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "#73BF69",
+        "value": null
+       },
+       {
+        "color": "#FF9830",
+        "value": 0.5
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Calculado pelos contadores de energia consumida e produzida do medidor da concessionária (média de 10 min).",
+   "id": 10
+  },
+  {
+   "type": "stat",
+   "title": "Comprado no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_consumida\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FF9830"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 11
+  },
+  {
+   "type": "stat",
+   "title": "Injetado no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_produzida\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#73BF69"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 12
+  },
+  {
+   "type": "stat",
+   "title": "Saldo (injetado − comprado)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_produzida\"}[$__range])) - sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_consumida\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "thresholds"
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "#73BF69",
+        "value": 0
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 13
+  },
+  {
+   "type": "stat",
+   "title": "Consumo da casa no período",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_de_carga_cosme_de_farias_total_energy\"}[$__range]))",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 6
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#5794F2"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 14
+  },
+  {
+   "type": "stat",
+   "title": "Autossuficiência",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "clamp(1 - (sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_consumida\"}[$__range]))) / (sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_de_carga_cosme_de_farias_total_energy\"}[$__range]))), 0, 1)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 0,
+    "y": 10
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#73BF69"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Parte do consumo da casa que não veio da concessionária (1 − comprado ÷ consumo).",
+   "id": 15
+  },
+  {
+   "type": "stat",
+   "title": "Autoconsumo do solar",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "clamp(1 - (sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_produzida\"}[$__range]))) / (sum(max_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\"}[$__range]) - min_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\"}[$__range]))), 0, 1)",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 6,
+    "y": 10
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "#FADE2A"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "description": "Parte da geração usada na própria casa (1 − injetado ÷ gerado).",
+   "id": 16
+  },
+  {
+   "type": "stat",
+   "title": "Tensão da rede",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_voltage_v{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_tensao\"}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 12,
+    "y": 10
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "decimals": 1,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 17
+  },
+  {
+   "type": "stat",
+   "title": "Fator de potência (rede)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "avg({job=\"homeassistant\",__name__='hass_sensor_power_factor_percent',entity=~'sensor.monitor_geral_de_energia_cosme_de_farias_power_factor_[ab]'}) / 100",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 18,
+    "y": 10
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "decimals": 0,
+     "noValue": "-",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ]
+    },
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "justifyMode": "center"
+   },
+   "id": 18
+  },
+  {
+   "type": "timeseries",
+   "title": "Casa, sol e rede",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity=\"sensor.monitor_de_carga_cosme_de_farias_total_active_power\"}",
+     "refId": "A",
+     "legendFormat": "Consumo da casa"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(solar_ac_power_watts{site=\"cosme-de-farias\"})",
+     "refId": "B",
+     "legendFormat": "Geração solar"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(rate(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_consumida\"}[5m])) * 3600000",
+     "refId": "C",
+     "legendFormat": "Comprado da rede"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "-(sum(rate(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_produzida\"}[5m])) * 3600000)",
+     "refId": "D",
+     "legendFormat": "Injetado na rede (−)"
+    }
+   ],
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 14
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "calcs": [
+      "lastNotNull",
+      "mean",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "description": "Comprado/injetado vêm dos contadores do medidor da concessionária (média de 5 min); injeção aparece negativa.",
+   "id": 19
+  },
+  {
+   "type": "timeseries",
+   "title": "Consumo da casa por fase",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity=~\"sensor.monitor_de_carga_cosme_de_farias_potencia_[ab]\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 24
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never",
+      "stacking": {
+       "mode": "normal"
+      }
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 20
+  },
+  {
+   "type": "timeseries",
+   "title": "Medidor da concessionária por fase",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity=~\"sensor.monitor_geral_de_energia_cosme_de_farias_potencia_[ab]\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 24
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "watt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 0
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 21
+  },
+  {
+   "type": "timeseries",
+   "title": "Energia por dia",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_de_carga_cosme_de_farias_total_energy\"}[1d]))",
+     "refId": "A",
+     "legendFormat": "Consumo da casa"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(max_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\"}[1d]) - min_over_time(solar_energy_total_kwh{site=\"cosme-de-farias\"}[1d]))",
+     "refId": "B",
+     "legendFormat": "Geração solar"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_consumida\"}[1d]))",
+     "refId": "C",
+     "legendFormat": "Comprado"
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "sum(increase(hass_sensor_energy_kwh{job=\"homeassistant\",entity=\"sensor.monitor_geral_de_energia_cosme_de_farias_energia_produzida\"}[1d]))",
+     "refId": "D",
+     "legendFormat": "Injetado"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 16,
+    "x": 0,
+    "y": 32
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "kwatth",
+     "custom": {
+      "fillOpacity": 80,
+      "lineWidth": 1,
+      "spanNulls": false,
+      "showPoints": "never",
+      "drawStyle": "bars"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "sum"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "interval": "1d",
+   "id": 22
+  },
+  {
+   "type": "timeseries",
+   "title": "Tensão (rede e carga)",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prometheus"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+     },
+     "expr": "hass_sensor_voltage_v{job=\"homeassistant\",entity=~\"sensor.(monitor_geral_de_energia_cosme_de_farias_|monitor_de_carga_cosme_de_farias_)tensao\"}",
+     "refId": "A",
+     "legendFormat": "{{friendly_name}}"
+    }
+   ],
+   "gridPos": {
+    "h": 9,
+    "w": 8,
+    "x": 16,
+    "y": 32
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "volt",
+     "custom": {
+      "fillOpacity": 12,
+      "lineWidth": 2,
+      "spanNulls": false,
+      "showPoints": "never"
+     },
+     "decimals": 1
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "min",
+      "max"
+     ],
+     "sortBy": "Last *",
+     "sortDesc": true
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 23
+  },
+  {
+   "id": 24,
+   "type": "row",
+   "title": "Por placa",
+   "collapsed": false,
+   "panels": [],
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 41
    }
   },
   {
@@ -407,7 +1276,7 @@
     "h": 13,
     "w": 12,
     "x": 0,
-    "y": 6
+    "y": 42
    },
    "fieldConfig": {
     "defaults": {
@@ -448,7 +1317,7 @@
     }
    ],
    "description": "Potência CC de cada placa. Placa bem abaixo das vizinhas = sombra, sujeira ou defeito.",
-   "id": 9
+   "id": 25
   },
   {
    "type": "table",
@@ -514,7 +1383,7 @@
     "h": 13,
     "w": 12,
     "x": 12,
-    "y": 6
+    "y": 42
    },
    "fieldConfig": {
     "defaults": {
@@ -675,7 +1544,7 @@
      }
     }
    ],
-   "id": 10
+   "id": 26
   },
   {
    "type": "bargauge",
@@ -701,7 +1570,7 @@
     "h": 13,
     "w": 12,
     "x": 0,
-    "y": 19
+    "y": 55
    },
    "fieldConfig": {
     "defaults": {
@@ -741,7 +1610,7 @@
      }
     }
    ],
-   "id": 11
+   "id": 27
   },
   {
    "type": "bargauge",
@@ -767,7 +1636,7 @@
     "h": 13,
     "w": 12,
     "x": 12,
-    "y": 19
+    "y": 55
    },
    "fieldConfig": {
     "defaults": {
@@ -826,7 +1695,7 @@
     }
    ],
    "description": "100% = média. Abaixo de ~85% de forma persistente merece uma olhada (limpeza, sombra, conector).",
-   "id": 12
+   "id": 28
   },
   {
    "type": "timeseries",
@@ -850,7 +1719,7 @@
     "h": 10,
     "w": 24,
     "x": 0,
-    "y": 32
+    "y": 68
    },
    "fieldConfig": {
     "defaults": {
@@ -881,7 +1750,7 @@
      "sort": "desc"
     }
    },
-   "id": 13
+   "id": 29
   },
   {
    "type": "timeseries",
@@ -905,7 +1774,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 42
+    "y": 78
    },
    "fieldConfig": {
     "defaults": {
@@ -936,7 +1805,7 @@
      "sort": "desc"
     }
    },
-   "id": 14
+   "id": 30
   },
   {
    "type": "timeseries",
@@ -960,7 +1829,7 @@
     "h": 9,
     "w": 12,
     "x": 12,
-    "y": 42
+    "y": 78
    },
    "fieldConfig": {
     "defaults": {
@@ -991,10 +1860,10 @@
      "sort": "desc"
     }
    },
-   "id": 15
+   "id": 31
   },
   {
-   "id": 16,
+   "id": 32,
    "type": "row",
    "title": "Por microinversor",
    "collapsed": false,
@@ -1003,7 +1872,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 51
+    "y": 87
    }
   },
   {
@@ -1028,7 +1897,7 @@
     "h": 9,
     "w": 16,
     "x": 0,
-    "y": 52
+    "y": 88
    },
    "fieldConfig": {
     "defaults": {
@@ -1062,7 +1931,7 @@
      "sort": "desc"
     }
    },
-   "id": 17
+   "id": 33
   },
   {
    "type": "bargauge",
@@ -1088,7 +1957,7 @@
     "h": 9,
     "w": 8,
     "x": 16,
-    "y": 52
+    "y": 88
    },
    "fieldConfig": {
     "defaults": {
@@ -1128,7 +1997,7 @@
      }
     }
    ],
-   "id": 18
+   "id": 34
   },
   {
    "type": "timeseries",
@@ -1152,7 +2021,7 @@
     "h": 8,
     "w": 8,
     "x": 0,
-    "y": 61
+    "y": 97
    },
    "fieldConfig": {
     "defaults": {
@@ -1183,7 +2052,7 @@
      "sort": "desc"
     }
    },
-   "id": 19
+   "id": 35
   },
   {
    "type": "timeseries",
@@ -1207,7 +2076,7 @@
     "h": 8,
     "w": 8,
     "x": 8,
-    "y": 61
+    "y": 97
    },
    "fieldConfig": {
     "defaults": {
@@ -1239,7 +2108,7 @@
      "sort": "desc"
     }
    },
-   "id": 20
+   "id": 36
   },
   {
    "type": "timeseries",
@@ -1263,7 +2132,7 @@
     "h": 8,
     "w": 8,
     "x": 16,
-    "y": 61
+    "y": 97
    },
    "fieldConfig": {
     "defaults": {
@@ -1295,10 +2164,10 @@
      "sort": "desc"
     }
    },
-   "id": 21
+   "id": 37
   },
   {
-   "id": 22,
+   "id": 38,
    "type": "row",
    "title": "Histórico diário",
    "collapsed": false,
@@ -1307,7 +2176,7 @@
     "h": 1,
     "w": 24,
     "x": 0,
-    "y": 69
+    "y": 105
    }
   },
   {
@@ -1332,7 +2201,7 @@
     "h": 9,
     "w": 12,
     "x": 0,
-    "y": 70
+    "y": 106
    },
    "fieldConfig": {
     "defaults": {
@@ -1369,7 +2238,7 @@
     }
    },
    "interval": "1d",
-   "id": 23
+   "id": 39
   },
   {
    "type": "timeseries",
@@ -1393,7 +2262,7 @@
     "h": 9,
     "w": 12,
     "x": 12,
-    "y": 70
+    "y": 106
    },
    "fieldConfig": {
     "defaults": {
@@ -1426,7 +2295,7 @@
     }
    },
    "interval": "1d",
-   "id": 24
+   "id": 40
   },
   {
    "type": "timeseries",
@@ -1450,7 +2319,7 @@
     "h": 6,
     "w": 24,
     "x": 0,
-    "y": 79
+    "y": 115
    },
    "fieldConfig": {
     "defaults": {
@@ -1481,7 +2350,7 @@
     }
    },
    "description": "1 = respondeu à leitura Modbus. Fica 0 à noite e quando a VPN cai.",
-   "id": 25
+   "id": 41
   }
  ]
 }

@@ -426,7 +426,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity!=\"sensor.solar_potencia\"}",
+     "expr": "hass_sensor_power_w{job=\"homeassistant\",entity!=\"sensor.solar_potencia\",entity!~\".*cosme_de_farias.*\"}",
      "refId": "A",
      "legendFormat": "{{friendly_name}}"
     }
@@ -475,7 +475,7 @@
       "type": "prometheus",
       "uid": "prometheus"
      },
-     "expr": "hass_sensor_voltage_v{job=\"homeassistant\"}",
+     "expr": "hass_sensor_voltage_v{job=\"homeassistant\",entity!~\".*cosme_de_farias.*\"}",
      "refId": "A",
      "legendFormat": "{{friendly_name}}"
     }

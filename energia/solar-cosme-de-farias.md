@@ -45,3 +45,19 @@ Grafana › Energia › **Solar - Cosme de Farias** (`https://grafana.homelab.ra
 A rede SERVERS (10.1.1.0/24) é a zona **DMZ** do UniFi Flamingos Paradise; a política
 "Allow Traffic" DMZ → VPN libera o monitor até 10.2.0.0/24. Do lado de Cosme de Farias,
 VPN → Internal já é permitido por padrão. Rótulo das métricas: `site="cosme-de-farias"`.
+
+## Medidores da casa e da concessionária
+
+Dois medidores Tuya (Tuya Local no Home Assistant, área isolada **Cosme de Farias**, IP fixo no
+DHCP do UniFi de lá):
+
+| Medidor | MAC | IP | Entidades |
+|---|---|---|---|
+| Monitor geral de energia (concessionária) | c4:82:e1:f4:04:e0 | 10.2.0.194 | `sensor.monitor_geral_de_energia_cosme_de_farias_*` — energia consumida (comprada) e produzida (injetada), potência/corrente/FP por fase, tensão, frequência |
+| Monitor de carga (casa) | a8:80:55:f7:68:06 | 10.2.0.229 | `sensor.monitor_de_carga_cosme_de_farias_*` — potência total e por fase, energia, corrente, FP, reativa, tensão |
+
+Chegam ao Prometheus pelo job `homeassistant` e entram na seção **Casa e rede** do mesmo dashboard:
+consumo agora, rede agora (comprando/injetando, pelos contadores), comprado/injetado/saldo e consumo
+no período, autossuficiência (1 − comprado ÷ consumo), autoconsumo (1 − injetado ÷ gerado),
+casa × sol × rede no tempo, por fase e por dia. Ficam fora dos painéis do HA desta casa
+(`NOCF` em `gen-ha-dashboards.py`).

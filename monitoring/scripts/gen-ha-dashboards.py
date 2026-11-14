@@ -15,6 +15,9 @@ J = 'job="homeassistant"'
 # Domínios sem estado próprio (ficam "unknown" até serem usados): não contam como problema
 NOSTATE = 'domain!~"button|conversation|tts|stt|event|scene|script|notify"'
 OUT = "grafana/dashboards/homeassistant"
+# Medidores de Cosme de Farias (casa dos pais) moram no mesmo HA, na área "Cosme de Farias":
+# ficam fora dos painéis desta casa e entram no dashboard Solar - Cosme de Farias.
+NOCF = 'entity!~".*cosme_de_farias.*"'
 
 
 def t(expr, ref="A", **kw):
@@ -169,9 +172,9 @@ def casa():
              [t(f"increase({TOT}[1d])", legendFormat="gerado")], 16, 8, h=8, unit="kwatth", bars=True, right=False))
     b.panels[-1]["interval"] = "1d"
     b.panels[-1]["timeFrom"] = "30d"
-    b.add(ts("Potência de todos os sensores (W)", [t(f'hass_sensor_power_w{{{J},entity!="sensor.solar_potencia"}}', legendFormat="{{friendly_name}}")],
+    b.add(ts("Potência de todos os sensores (W)", [t(f'hass_sensor_power_w{{{J},entity!="sensor.solar_potencia",{NOCF}}}', legendFormat="{{friendly_name}}")],
              0, 12, h=7, unit="watt", noval="nenhum sensor de potência"),
-          ts("Tensão da rede", [t(f'hass_sensor_voltage_v{{{J}}}', legendFormat="{{friendly_name}}")],
+          ts("Tensão da rede", [t(f'hass_sensor_voltage_v{{{J},{NOCF}}}', legendFormat="{{friendly_name}}")],
              12, 12, h=7, unit="volt", noval="nenhum sensor de tensão"))
     b.row("Clima")
     b.add(ts("Temperatura", [t(f"hass_sensor_temperature_celsius{{{J}}}", legendFormat="{{friendly_name}}"),

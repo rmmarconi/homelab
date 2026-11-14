@@ -138,6 +138,68 @@ def placas_table():
                 {"id": "sortBy", "options": {"sort": [{"field": "Micro"}, {"field": "Placa"}]}}]}
 
 
+# ---- Medidores Tuya de Cosme de Farias (via Home Assistant, área "Cosme de Farias") ----
+HA = 'job="homeassistant"'
+def ent(metric, name):
+    return f'{metric}{{{HA},entity="sensor.{name}"}}'
+CARGA = "monitor_de_carga_cosme_de_farias_"
+REDE = "monitor_geral_de_energia_cosme_de_farias_"
+IMP = ent("hass_sensor_energy_kwh", REDE + "energia_consumida")     # comprado da concessionária
+EXP = ent("hass_sensor_energy_kwh", REDE + "energia_produzida")     # injetado na rede
+CASA = ent("hass_sensor_energy_kwh", CARGA + "total_energy")        # consumo da casa
+SOL_TOT = 'solar_energy_total_kwh{site="cosme-de-farias"}'
+KWH_TO_W = 3600 * 1000
+
+
+def inc(expr, rng="$__range"):
+    return f"sum(increase({expr}[{rng}]))"
+
+
+def rate_w(expr, rng="10m"):
+    return f"sum(rate({expr}[{rng}])) * {KWH_TO_W}"
+
+
+def casa_e_rede(b):
+    gerado = f"sum(max_over_time({SOL_TOT}[$__range]) - min_over_time({SOL_TOT}[$__range]))"
+    b.row("Casa e rede (medidores Tuya)")
+    b.add(stat("Consumo da casa agora", ent("hass_sensor_power_w", CARGA + "total_active_power"), 0, 4, "watt", BLUE, 0,
+               desc="Monitor de carga (soma das fases A e B)."),
+          stat("Rede agora (+ compra / − injeta)", f"({rate_w(IMP)}) - ({rate_w(EXP)})", 4, 4, "watt", "text", 0,
+               desc="Calculado pelos contadores de energia consumida e produzida do medidor da concessionária (média de 10 min).",
+               thr=[{"color": GREEN, "value": None}, {"color": ORANGE, "value": 0.5}]),
+          stat("Comprado no período", inc(IMP), 8, 4, "kwatth", ORANGE, 1),
+          stat("Injetado no período", inc(EXP), 12, 4, "kwatth", GREEN, 1),
+          stat("Saldo (injetado − comprado)", f"{inc(EXP)} - {inc(IMP)}", 16, 4, "kwatth", "text", 1,
+               thr=[{"color": "red", "value": None}, {"color": GREEN, "value": 0}]),
+          stat("Consumo da casa no período", inc(CASA), 20, 4, "kwatth", BLUE, 1))
+    b.add(stat("Autossuficiência", f"clamp(1 - ({inc(IMP)}) / ({inc(CASA)}), 0, 1)", 0, 6, "percentunit", GREEN, 0,
+               desc="Parte do consumo da casa que não veio da concessionária (1 − comprado ÷ consumo)."),
+          stat("Autoconsumo do solar", f"clamp(1 - ({inc(EXP)}) / ({gerado}), 0, 1)", 6, 6, "percentunit", YELLOW, 0,
+               desc="Parte da geração usada na própria casa (1 − injetado ÷ gerado)."),
+          stat("Tensão da rede", ent("hass_sensor_voltage_v", REDE + "tensao"), 12, 6, "volt", "text", 1),
+          stat("Fator de potência (rede)", f"avg({{{HA},__name__='hass_sensor_power_factor_percent',entity=~'sensor.{REDE}power_factor_[ab]'}}) / 100",
+               18, 6, "percentunit", "text", 0))
+    b.add(ts("Casa, sol e rede", [
+              t(ent("hass_sensor_power_w", CARGA + "total_active_power"), "Consumo da casa", "A"),
+              t('sum(solar_ac_power_watts{site="cosme-de-farias"})', "Geração solar", "B"),
+              t(rate_w(IMP, "5m"), "Comprado da rede", "C"),
+              t(f"-({rate_w(EXP, '5m')})", "Injetado na rede (−)", "D")],
+             0, 24, 10, "watt", decimals=0, calcs=("lastNotNull", "mean", "max"),
+             desc="Comprado/injetado vêm dos contadores do medidor da concessionária (média de 5 min); injeção aparece negativa."))
+    b.add(ts("Consumo da casa por fase", [t(f'hass_sensor_power_w{{{HA},entity=~"sensor.{CARGA}potencia_[ab]"}}', "{{friendly_name}}")],
+             0, 12, 8, "watt", stack=True, decimals=0, legend_right=False),
+          ts("Medidor da concessionária por fase", [t(f'hass_sensor_power_w{{{HA},entity=~"sensor.{REDE}potencia_[ab]"}}', "{{friendly_name}}")],
+             12, 12, 8, "watt", decimals=0, legend_right=False))
+    b.add(ts("Energia por dia", [
+              t(inc(CASA, "1d"), "Consumo da casa", "A"),
+              t(f"sum(max_over_time({SOL_TOT}[1d]) - min_over_time({SOL_TOT}[1d]))", "Geração solar", "B"),
+              t(inc(IMP, "1d"), "Comprado", "C"),
+              t(inc(EXP, "1d"), "Injetado", "D")],
+             0, 16, 9, "kwatth", bars=True, interval="1d", decimals=1, calcs=("mean", "sum"), legend_right=False),
+          ts("Tensão (rede e carga)", [t(f'hass_sensor_voltage_v{{{HA},entity=~"sensor.({REDE}|{CARGA})tensao"}}', "{{friendly_name}}")],
+             16, 8, 9, "volt", decimals=1, legend_right=False, calcs=("lastNotNull", "min", "max")))
+
+
 def board():
     b = Board()
     up = f'solarman_up{{{S}}}'
@@ -152,6 +214,8 @@ def board():
                desc="À noite os três ficam offline (o logger desliga junto com o micro)."),
           stat("Temperatura máx.", f"max(last_over_time(solar_temperature_celsius{{{S}}}[15m]))", 20, 4, "celsius", "text", 1,
                thr=[{"color": GREEN, "value": None}, {"color": ORANGE, "value": 60}, {"color": "red", "value": 75}]))
+
+    casa_e_rede(b)
 
     b.row("Por placa")
     b.add(bars("Potência por placa agora", f"last_over_time(solar_pv_power_watts{{{S}}}[15m])", 0, 12, 13, "watt",
@@ -193,7 +257,7 @@ def board():
 
     return {
         "title": "Solar - Cosme de Farias", "uid": "solar-cosme-de-farias", "tags": ["energia", "solar"],
-        "timezone": "browser", "refresh": "1m", "schemaVersion": 39, "editable": True,
+        "timezone": "browser", "refresh": "1m", "description": "Microinversores Deye (geração por placa) e medidores Tuya da casa e da concessionária", "schemaVersion": 39, "editable": True,
         "time": {"from": "now/d", "to": "now/d"},
         "templating": {"list": [{
             "name": "inverter", "label": "Micro", "type": "query", "datasource": P,
